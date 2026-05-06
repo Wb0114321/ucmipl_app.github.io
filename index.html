@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-<title>UCMIPL Login</title>
+<title>UCMIPL Dashboard</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
@@ -26,188 +24,162 @@ box-sizing:border-box;
 --text:#e6f1ff;
 --primary:#00d4ff;
 --primary2:#007bff;
---danger:#ff5c7c;
 }
 
 body{
 font-family:'Inter',sans-serif;
 background:
-radial-gradient(circle at top left,#00d4ff33,transparent 30%),
+radial-gradient(circle at top left,#00d4ff22,transparent 30%),
 radial-gradient(circle at bottom right,#007bff22,transparent 30%),
-linear-gradient(135deg,var(--bg1),var(--bg2));
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:18px;
+linear-gradient(145deg,var(--bg1),var(--bg2));
 color:var(--text);
-overflow:hidden;
+min-height:100vh;
+overflow-x:hidden;
 }
 
-.login-box{
-width:100%;
-max-width:420px;
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(18px);
-border:1px solid rgba(255,255,255,0.08);
-border-radius:28px;
-padding:24px 18px;
-box-shadow:0 20px 50px rgba(0,0,0,0.4);
-animation:fadeIn .5s ease;
-}
-
-.logo{
-width:80px;
-height:80px;
+.app{
+max-width:500px;
 margin:auto;
-margin-bottom:14px;
-border-radius:24px;
-background:linear-gradient(135deg,var(--primary),var(--primary2));
+padding:16px;
+}
+
+/* TOPBAR */
+.topbar{
 display:flex;
+justify-content:space-between;
 align-items:center;
-justify-content:center;
-font-size:34px;
-font-weight:800;
-color:white;
-box-shadow:0 10px 30px rgba(0,212,255,0.3);
-}
-
-.title{
-text-align:center;
-font-size:34px;
-font-weight:800;
-margin-bottom:5px;
-letter-spacing:2px;
-}
-
-.subtitle{
-text-align:center;
-font-size:14px;
-opacity:.8;
-margin-bottom:25px;
-}
-
-.field{
 margin-bottom:16px;
 }
 
-label{
-display:block;
-margin-bottom:8px;
-font-size:14px;
-font-weight:600;
-}
-
-.input-box{
-position:relative;
-}
-
-.input-box span{
-position:absolute;
-left:14px;
-top:50%;
-transform:translateY(-50%);
-font-size:18px;
-}
-
-input{
-width:100%;
-height:56px;
-border:none;
-outline:none;
-padding:0 16px 0 46px;
-border-radius:16px;
-background:rgba(255,255,255,0.08);
-color:white;
-font-size:16px;
-border:1px solid rgba(255,255,255,0.08);
-}
-
-input:focus{
-border:1px solid var(--primary);
-box-shadow:0 0 0 3px rgba(0,212,255,0.15);
-}
-
-input::placeholder{
-color:#b8c5d8;
-}
-
-.login-btn{
-width:100%;
-height:56px;
-border:none;
-border-radius:16px;
-background:linear-gradient(135deg,var(--primary),var(--primary2));
-color:white;
-font-size:17px;
+.logo{
+font-size:32px;
 font-weight:800;
-cursor:pointer;
-margin-top:8px;
-box-shadow:0 10px 25px rgba(0,212,255,0.25);
+letter-spacing:1px;
 }
 
-.login-btn:active{
-transform:scale(.98);
-}
-
-.msg{
-text-align:center;
-margin-top:15px;
-font-size:14px;
-font-weight:600;
-min-height:20px;
-color:var(--danger);
-}
-
-.footer{
-margin-top:16px;
-text-align:center;
-font-size:12px;
-opacity:.7;
-}
-
-.loading{
-display:none;
-margin:auto;
-margin-top:14px;
-width:32px;
-height:32px;
-border:4px solid rgba(255,255,255,0.2);
-border-top:4px solid var(--primary);
-border-radius:50%;
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-100%{
-transform:rotate(360deg);
-}
-}
-
-@keyframes fadeIn{
-from{
-opacity:0;
-transform:translateY(15px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-@media(max-width:480px){
-
-body{
-padding:14px;
-}
-
-.login-box{
-padding:22px 16px;
+/* HERO */
+.hero{
+background:rgba(255,255,255,0.06);
+border:1px solid rgba(255,255,255,0.08);
+backdrop-filter:blur(14px);
+padding:18px;
 border-radius:24px;
+margin-bottom:16px;
+box-shadow:0 10px 35px rgba(0,0,0,0.3);
+}
+
+.welcome{
+font-size:15px;
+opacity:.8;
+margin-bottom:4px;
+}
+
+.name{
+font-size:28px;
+font-weight:800;
+margin-bottom:14px;
+}
+
+/* SUMMARY */
+.summary{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+
+.scard{
+background:linear-gradient(135deg,var(--primary),var(--primary2));
+padding:16px 10px;
+border-radius:18px;
+text-align:center;
+font-weight:700;
+box-shadow:0 8px 20px rgba(0,212,255,0.18);
+}
+
+.scard span{
+display:block;
+font-size:20px;
+margin-top:6px;
+font-weight:800;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-top:14px;
+}
+
+.card{
+background:rgba(255,255,255,0.06);
+border:1px solid rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+padding:18px 14px;
+border-radius:22px;
+cursor:pointer;
+transition:.2s;
+min-height:105px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+}
+
+.card:active{
+transform:scale(.97);
+}
+
+.icon{
+font-size:28px;
+margin-bottom:12px;
 }
 
 .title{
-font-size:30px;
+font-size:16px;
+font-weight:800;
+}
+
+.desc{
+font-size:12px;
+opacity:.75;
+margin-top:5px;
+line-height:1.4;
+}
+
+/* LOADING */
+.loading{
+text-align:center;
+padding:15px;
+font-size:14px;
+opacity:.8;
+}
+
+/* MOBILE */
+@media(max-width:480px){
+
+.app{
+padding:14px;
+}
+
+.logo{
+font-size:28px;
+}
+
+.summary{
+gap:10px;
+}
+
+.scard{
+padding:15px 8px;
+}
+
+.scard span{
+font-size:18px;
+}
+
+.card{
+min-height:95px;
+padding:16px 12px;
 }
 
 }
@@ -217,141 +189,176 @@ font-size:30px;
 
 <body>
 
-<div class="login-box">
+<div class="app">
 
-<div class="logo">U</div>
-
-<div class="title">UCMIPL</div>
-
-<div class="subtitle">
-Secure Login Access
+<!-- TOP -->
+<div class="topbar">
+<div class="logo">UCMIPL</div>
 </div>
 
-<div class="field">
-<label>Username</label>
+<!-- HERO -->
+<div class="hero">
 
-<div class="input-box">
-<span>👤</span>
-<input type="text" id="username" placeholder="Enter Username">
-</div>
+<div class="welcome">
+Coal Dispatch Monitoring System
 </div>
 
-<div class="field">
-<label>Password</label>
-
-<div class="input-box">
-<span>🔒</span>
-<input type="password" id="password" placeholder="Enter Password">
-</div>
+<div class="name">
+Dashboard
 </div>
 
-<button class="login-btn" onclick="login()">
-Login
-</button>
+<div class="summary">
 
-<div class="loading" id="loading"></div>
+<div class="scard">
+Target
+<span id="t">-</span>
+</div>
 
-<div class="msg" id="msg"></div>
+<div class="scard">
+Achieved
+<span id="a">-</span>
+</div>
 
-<div class="footer">
-UCMIPL Dispatch Monitoring System
+<div class="scard">
+Remaining
+<span id="r">-</span>
+</div>
+
+<div class="scard">
+% Done
+<span id="p">-</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- MENU -->
+<div class="grid">
+
+<div class="card" onclick="go('dpr.html')">
+<div class="icon">📄</div>
+<div class="title">DPR Report</div>
+<div class="desc">Daily dispatch report summary</div>
+</div>
+
+<div class="card" onclick="go('datewise.html')">
+<div class="icon">📅</div>
+<div class="title">Date Wise</div>
+<div class="desc">Daily trip & qty details</div>
+</div>
+
+<div class="card" onclick="go('monthwise.html')">
+<div class="icon">🗓️</div>
+<div class="title">Month Wise</div>
+<div class="desc">Monthly summary & charts</div>
+</div>
+
+<div class="card" onclick="go('permit.html')">
+<div class="icon">✅</div>
+<div class="title">Permit Details</div>
+<div class="desc">Credit & balance permits</div>
+</div>
+
+<div class="card" onclick="go('cancel.html')">
+<div class="icon">❌</div>
+<div class="title">Cancelled Epass</div>
+<div class="desc">Cancelled permit tracking</div>
+</div>
+
+<div class="card" onclick="go('live_dispatch.html')">
+<div class="icon">🚚</div>
+<div class="title">Live Dispatch</div>
+<div class="desc">Real time vehicle dispatch</div>
+</div>
+
+<div class="card" onclick="go('Summarytg.html')">
+<div class="icon">📊</div>
+<div class="title">Target Dashboard</div>
+<div class="desc">Target vs achievement monitor</div>
+</div>
+
+</div>
+
+<div class="loading" id="loading">
+Loading summary...
 </div>
 
 </div>
 
 <script>
 
-// 🔥 USERS API
+// NAVIGATION
+function go(page){
+window.location.href = page;
+}
+
+// API
 const API_URL =
-"https://script.google.com/macros/s/AKfycbzYccPIgrf6LLentmj3saKKoWZTbR8tgAtHxGfok3G9JaDnpMbuSRV6WEARLJuDsGc-mA/exec";
+"https://script.google.com/macros/s/AKfycbw7gp0-WUVigLKt8Saced-bkuU-BEQXjJx82tIvUnKPxfEfDckpvQr2zg4ExrYfRdA1pA/exec";
 
-// AUTO LOGIN
-if(localStorage.getItem("user")){
-window.location.href="dashboard.html";
-}
+const TARGET = 4000000;
 
-async function login(){
-
-let user =
-document.getElementById("username").value.trim();
-
-let pass =
-document.getElementById("password").value.trim();
-
-let msg =
-document.getElementById("msg");
-
-let loading =
-document.getElementById("loading");
-
-if(user==="" || pass===""){
-msg.innerText="Enter Username & Password";
-return;
-}
-
-msg.innerText="";
-loading.style.display="block";
+// LOAD SUMMARY
+async function loadSummary(){
 
 try{
 
-// 🔥 CACHE BREAK
-const res = await fetch(
-API_URL + "?t=" + Date.now()
-);
+let res = await fetch(API_URL + "?t=" + Date.now());
 
-const data = await res.json();
+let data = await res.json();
 
-let success = false;
+let total = 0;
 
+// skip header
 for(let i=1;i<data.length;i++){
 
-let dbUser =
-String(data[i][0]).trim();
+let row = data[i];
 
-let dbPass =
-String(data[i][1]).trim();
+if(!row || row.length < 3) continue;
 
-if(
-dbUser === user &&
-dbPass === pass
-){
+let qty = parseFloat(row[2]);
 
-success = true;
-
-localStorage.setItem("user",user);
-
-window.location.href="dashboard.html";
-
-break;
-}
+if(!isNaN(qty)){
+total += qty;
 }
 
-loading.style.display="none";
-
-if(!success){
-msg.innerText="Invalid Username or Password";
 }
+
+let remaining = TARGET - total;
+
+let percent = (total / TARGET) * 100;
+
+// UI
+document.getElementById("t").innerText =
+TARGET.toLocaleString();
+
+document.getElementById("a").innerText =
+total.toFixed(2);
+
+document.getElementById("r").innerText =
+remaining.toFixed(2);
+
+document.getElementById("p").innerText =
+percent.toFixed(2) + "%";
+
+document.getElementById("loading").style.display="none";
 
 }catch(err){
 
 console.log(err);
 
-loading.style.display="none";
-
-msg.innerText="Server Error";
-
-}
+document.getElementById("loading").innerText =
+"Unable to load summary";
 
 }
 
-// ENTER KEY
-document.addEventListener("keypress",function(e){
-
-if(e.key==="Enter"){
-login();
 }
 
-});
+// AUTO REFRESH
+loadSummary();
+
+setInterval(loadSummary,60000);
 
 </script>
 
