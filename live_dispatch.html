@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Live Dispatch</title>
+
+<style>
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--danger:#ff5252;
+--accent:#4caf50;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:var(--bg);
+color:var(--text);
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+padding:12px;
+background:#061529;
+position:sticky;
+top:0;
+z-index:100;
+}
+
+.back{
+background:var(--primary);
+border:none;
+padding:10px;
+border-radius:8px;
+margin-right:10px;
+font-weight:bold;
+}
+
+/* SEARCH */
+.search{
+padding:10px;
+}
+.search input{
+width:100%;
+padding:14px;
+border-radius:10px;
+border:none;
+background:var(--card);
+color:white;
+font-size:15px;
+}
+
+/* CARDS */
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+}
+
+.card{
+background:linear-gradient(135deg,#00d4ff,#007bff);
+padding:12px;
+border-radius:12px;
+text-align:center;
+font-weight:bold;
+}
+
+.card span{
+display:block;
+font-size:20px;
+margin-top:5px;
+}
+
+/* TABLE */
+.table-box{
+margin:10px;
+background:var(--card);
+border-radius:12px;
+overflow:auto;
+max-height:60vh;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#112a55;
+padding:12px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #1e3a5f;
+text-align:center;
+font-size:14px;
+}
+
+/* STATUS */
+.pending{ background:var(--danger); }
+.done{ background:var(--accent); }
+
+/* BUTTON */
+.btn{
+margin:10px;
+padding:14px;
+border:none;
+border-radius:10px;
+background:var(--primary);
+color:#000;
+font-weight:bold;
+width:calc(100% - 20px);
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<button class="back" onclick="goBack()">←</button>
+<h3>Live Dispatch</h3>
+</div>
+
+<div class="search">
+<input type="text" id="search" placeholder="🔍 Search Vehicle..." onkeyup="renderAll()">
+</div>
+
+<div class="cards">
+<div class="card">Trucks <span id="c1">0</span></div>
+<div class="card">Gross <span id="c2">0</span></div>
+<div class="card">Pending <span id="c3">0</span></div>
+<div class="card">Double <span id="c4">0</span></div>
+<div class="card">Triple <span id="c5">0</span></div>
+<div class="card">Entries <span id="c6">0</span></div>
+</div>
+
+<div class="table-box">
+<table>
+<thead>
+<tr>
+<th>Vehicle</th>
+<th>Tare</th>
+<th>Gross</th>
+<th>Time</th>
+<th>TAT</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<button class="btn" onclick="manualRefresh()">🔄 Refresh</button>
+
+<script>
+
+function goBack(){
+window.location.href="dashboard.html";
+}
+
+// 🔥 YOUR APPS SCRIPT URL
+const API_URL="https://script.google.com/macros/s/AKfycbz_d-7LEMHd9Aacm-8KNFnYP60NWAWeXrn6sN265htHUIp2ewhWip3a2TL2X35MbvxQvw/exec";
+
+let fullData=[];
+
+/* 🔥 CACHE SYSTEM */
+const CACHE_KEY="live_dispatch_cache";
+const CACHE_TIME=2*60*1000; // 2 min
+
+async function loadData(){
+
+let cache=localStorage.getItem(CACHE_KEY);
+
+if(cache){
+let parsed=JSON.parse(cache);
+
+if(Date.now()-parsed.time < CACHE_TIME){
+fullData=parsed.data;
+renderAll();
+return;
+}
+}
+
+// FETCH FROM SCRIPT
+let res=await fetch(API_URL);
+let data=await res.json();
+
+fullData=data;
+
+// SAVE CACHE
+localStorage.setItem(CACHE_KEY,JSON.stringify({
+time:Date.now(),
+data:fullData
+}));
+
+renderAll();
+}
+
+/* 🔄 AUTO REFRESH (30 sec silent) */
+setInterval(loadData,30000);
+
+function manualRefresh(){
+localStorage.removeItem(CACHE_KEY);
+loadData();
+}
+
+/* RENDER */
+function renderAll(){
+
+let search=document.getElementById("search").value.toLowerCase();
+
+let tbody=document.getElementById("tbody");
+tbody.innerHTML="";
+
+let vehicleCount={};
+let totalEntries=0;
+let totalGross=0;
+
+for(let i=1;i<fullData.length;i++){
+
+let row=fullData[i];
+let vehicle=row[1];
+
+if(!vehicle) continue;
+
+if(search && !vehicle.toLowerCase().includes(search)) continue;
+
+let gross=row[3];
+
+totalEntries++;
+
+if(!vehicleCount[vehicle]) vehicleCount[vehicle]=0;
+vehicleCount[vehicle]++;
+
+if(gross && gross!="" && gross!="0") totalGross++;
+
+let tr=document.createElement("tr");
+
+tr.className = (!gross || gross=="0") ? "pending" : "done";
+
+tr.innerHTML=`
+<td>${vehicle}</td>
+<td>${row[2]}</td>
+<td>${row[3]}</td>
+<td>${row[4]}</td>
+<td>${row[5]}</td>
+`;
+
+tbody.appendChild(tr);
+}
+
+/* SUMMARY */
+let unique=Object.keys(vehicleCount).length;
+
+let double=0,triple=0;
+for(let v in vehicleCount){
+if(vehicleCount[v]==2) double++;
+if(vehicleCount[v]>=3) triple++;
+}
+
+let pending=totalEntries-totalGross;
+
+document.getElementById("c1").innerText=unique;
+document.getElementById("c2").innerText=totalGross;
+document.getElementById("c3").innerText=pending;
+document.getElementById("c4").innerText=double;
+document.getElementById("c5").innerText=triple;
+document.getElementById("c6").innerText=totalEntries;
+}
+
+/* START */
+loadData();
+
+</script>
+
+</body>
+</html>

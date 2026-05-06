@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Target Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--green:#4caf50;
+--red:#ff5252;
+}
+
+body{margin:0;font-family:Arial;background:var(--bg);color:var(--text);}
+
+.container{max-width:900px;margin:auto;}
+
+.header{
+display:flex;align-items:center;padding:12px;background:#061529;
+}
+
+.back{background:var(--primary);border:none;padding:10px;border-radius:8px;margin-right:10px;}
+
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+}
+
+.card{
+background:linear-gradient(135deg,#00d4ff,#007bff);
+padding:14px;border-radius:12px;text-align:center;font-weight:bold;
+}
+
+.card span{display:block;font-size:18px;margin-top:5px;}
+
+.progress-box{margin:10px;background:var(--card);padding:12px;border-radius:12px;}
+
+.progress-bar{height:22px;background:#333;border-radius:10px;overflow:hidden;}
+.progress{height:100%;background:var(--green);text-align:center;line-height:22px;}
+
+.alert{
+margin:10px;
+padding:12px;
+border-radius:10px;
+font-weight:bold;
+text-align:center;
+display:none;
+}
+
+.alert.red{background:#ff000033;color:#ff5252;}
+.alert.green{background:#00ff0033;color:#4caf50;}
+
+canvas{
+background:#0f1f3d;
+margin:10px;
+border-radius:10px;
+}
+
+.btn{
+margin:10px;
+padding:14px;
+border:none;
+border-radius:10px;
+background:var(--primary);
+color:#000;
+font-weight:bold;
+width:calc(100% - 20px);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<button class="back" onclick="goBack()">←</button>
+<h3>Target Dashboard</h3>
+</div>
+
+<div id="alertBox" class="alert"></div>
+
+<div id="reportArea">
+
+<div class="cards">
+<div class="card">Target <span id="target"></span></div>
+<div class="card">Achieved <span id="achieved"></span></div>
+<div class="card">Remaining <span id="remaining"></span></div>
+<div class="card">% Done <span id="percent"></span></div>
+</div>
+
+<div class="progress-box">
+<div class="progress-bar">
+<div class="progress" id="progressBar">0%</div>
+</div>
+</div>
+
+<div class="cards">
+<div class="card">Per Day <span id="perDay"></span></div>
+<div class="card">Trips/Day <span id="trips"></span></div>
+<div class="card">Days Left <span id="daysLeft"></span></div>
+<div class="card">Today Target <span id="todayTarget"></span></div>
+</div>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+<button class="btn" onclick="downloadPDF()">📄 PDF</button>
+<button class="btn" onclick="downloadJPG()">🖼️ JPG</button>
+<button class="btn" onclick="toggleTV()">📺 TV Mode</button>
+
+</div>
+
+<script>
+
+const API_URL="https://script.google.com/macros/s/AKfycbw7gp0-WUVigLKt8Saced-bkuU-BEQXjJx82tIvUnKPxfEfDckpvQr2zg4ExrYfRdA1pA/exec";
+const TARGET=4000000;
+const END_DATE=new Date("2027-03-25");
+
+let chart;
+
+async function loadData(){
+
+let res=await fetch(API_URL);
+let data=await res.json();
+
+let totalQty=0;
+let dailyMap={};
+
+// build daily
+for(let i=1;i<data.length;i++){
+
+let date=data[i][0];
+let qty=parseFloat(data[i][2])||0;
+
+totalQty+=qty;
+
+let d=new Date(date).toLocaleDateString();
+
+if(!dailyMap[d]) dailyMap[d]=0;
+dailyMap[d]+=qty;
+}
+
+// calc
+let remaining=TARGET-totalQty;
+let percent=((totalQty/TARGET)*100).toFixed(2);
+
+let today=new Date();
+let daysLeft=Math.ceil((END_DATE-today)/(1000*60*60*24));
+if(daysLeft<=0) daysLeft=1;
+
+let perDay=remaining/daysLeft;
+let trips=Math.ceil(perDay/32);
+
+// TODAY progress
+let todayKey=new Date().toLocaleDateString();
+let todayDone=dailyMap[todayKey]||0;
+
+// ALERT
+let alertBox=document.getElementById("alertBox");
+
+if(todayDone < perDay){
+alertBox.style.display="block";
+alertBox.className="alert red";
+alertBox.innerText="⚠ Today behind target!";
+}else{
+alertBox.style.display="block";
+alertBox.className="alert green";
+alertBox.innerText="✅ On track!";
+}
+
+// UI
+document.getElementById("target").innerText=TARGET.toLocaleString();
+document.getElementById("achieved").innerText=totalQty.toFixed(0);
+document.getElementById("remaining").innerText=remaining.toFixed(0);
+document.getElementById("percent").innerText=percent+"%";
+
+document.getElementById("perDay").innerText=perDay.toFixed(0);
+document.getElementById("trips").innerText=trips;
+document.getElementById("daysLeft").innerText=daysLeft;
+document.getElementById("todayTarget").innerText=perDay.toFixed(0);
+
+let bar=document.getElementById("progressBar");
+bar.style.width=percent+"%";
+bar.innerText=percent+"%";
+
+// 📈 GRAPH
+let labels=Object.keys(dailyMap);
+let actual=Object.values(dailyMap);
+
+// projection line
+let requiredLine=labels.map(()=>perDay);
+
+if(chart) chart.destroy();
+
+chart=new Chart(document.getElementById("chart"),{
+type:'line',
+data:{
+labels:labels,
+datasets:[
+{label:'Actual Dispatch',data:actual,borderColor:'#00d4ff'},
+{label:'Required Pace',data:requiredLine,borderColor:'#ff5252',borderDash:[5,5]}
+]
+}
+});
+
+}
+
+/* TV MODE */
+function toggleTV(){
+
+document.documentElement.requestFullscreen();
+
+document.body.style.fontSize="20px";
+}
+
+function goBack(){
+    window.location.href = "dashboard.html";
+}
+
+/* AUTO REFRESH */
+setInterval(loadData,60000);
+
+/* EXPORT */
+function downloadPDF(){
+const {jsPDF}=window.jspdf;
+html2canvas(document.getElementById("reportArea")).then(canvas=>{
+let img=canvas.toDataURL();
+let pdf=new jsPDF();
+pdf.addImage(img,'PNG',10,10,180,100);
+pdf.save("report.pdf");
+});
+}
+
+function downloadJPG(){
+html2canvas(document.getElementById("reportArea")).then(canvas=>{
+let link=document.createElement('a');
+link.download='report.jpg';
+link.href=canvas.toDataURL();
+link.click();
+});
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>

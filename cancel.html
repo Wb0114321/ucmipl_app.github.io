@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cancelled E-Pass</title>
+
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f6f9; }
+
+        .header {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .back {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            background: black;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .container { padding: 15px; }
+
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        th {
+            background: #dc3545;
+            color: white;
+        }
+
+        .summary {
+            background: white;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 5px solid #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <button class="back" onclick="goBack()">⬅ Back</button>
+    Cancelled E-Pass
+</div>
+
+<div class="container">
+
+    🔍 <input type="text" id="search" placeholder="Search anything..." onkeyup="applyFilters()">
+
+    📆 <select id="monthFilter" onchange="applyFilters()">
+        <option value="">All Months</option>
+    </select>
+
+    📅 From <input type="date" id="fromDate" onchange="applyFilters()">
+    To <input type="date" id="toDate" onchange="applyFilters()">
+
+    <div class="summary" id="summaryBox"></div>
+
+    <table id="table">
+        <thead>
+            <tr>
+                <th>Cancel Pass No</th>
+                <th>Grade</th>
+                <th>Cancel Qty</th>
+                <th>Reason</th>
+                <th>Operator</th>
+                <th>Status Return</th>
+                <th>Status Solved</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+</div>
+
+<script>
+
+// 🔐 Login check
+if(!localStorage.getItem("user")){
+    window.location.href = "index.html";
+}
+
+function goBack(){ window.location.href="dashboard.html"; }
+
+// 🔑 API
+const SHEET_ID = "1NO5OV7GV5Ii6rFXHK5KLgXeNDD9UudvpfuE4jUThtsc";
+const API_KEY = "AIzaSyCsisw-gn_0T-_IYpdUZQyvI92lzo_NFgU";
+
+let fullData = [];
+let filteredData = [];
+
+// 📡 Fetch
+fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Cancelled_epass_26-27?key=${API_KEY}`)
+.then(res => res.json())
+.then(data => {
+    fullData = data.values;
+    setupMonths();
+    applyFilters();
+});
+
+// 📆 Month dropdown
+function setupMonths(){
+    let months = new Set();
+
+    for(let i=1;i<fullData.length;i++){
+        let d = fullData[i][1]; // entry_date
+        if(d){
+            let m = new Date(d).toLocaleString('default',{month:'long'});
+            months.add(m);
+        }
+    }
+
+    let select = document.getElementById("monthFilter");
+    months.forEach(m=>{
+        let opt = document.createElement("option");
+        opt.value = m;
+        opt.text = m;
+        select.appendChild(opt);
+    });
+}
+
+// 🔍 Apply all filters
+function applyFilters(){
+
+    let search = document.getElementById("search").value.toLowerCase();
+    let month = document.getElementById("monthFilter").value;
+    let from = document.getElementById("fromDate").value;
+    let to = document.getElementById("toDate").value;
+
+    filteredData = [fullData[0]];
+
+    for(let i=1;i<fullData.length;i++){
+
+        let row = fullData[i];
+
+        let cancelNo = row[2];
+        if(!cancelNo || cancelNo.trim()==="") continue;
+
+        let date = row[1];
+
+        // 🔍 search
+        let matchSearch = row.join(" ").toLowerCase().includes(search);
+
+        // 📆 month
+        let matchMonth = true;
+        if(month){
+            let m = new Date(date).toLocaleString('default',{month:'long'});
+            matchMonth = (m === month);
+        }
+
+        // 📅 date range
+        let matchDate = true;
+        if(from && to){
+            let d = new Date(date);
+            matchDate = (d >= new Date(from) && d <= new Date(to));
+        }
+
+        if(matchSearch && matchMonth && matchDate){
+            filteredData.push(row);
+        }
+    }
+
+    renderTable();
+    updateSummary();
+}
+
+// 📊 Table
+function renderTable(){
+    let tbody = document.querySelector("#table tbody");
+    tbody.innerHTML = "";
+
+    for(let i=1;i<filteredData.length;i++){
+
+        let row = filteredData[i];
+
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${row[2]}</td>
+            <td>${row[3]}</td>
+            <td>${row[6]}</td>
+            <td>${row[7]}</td>
+            <td>${row[8]}</td>
+            <td>${row[10]}</td>
+            <td>${row[11]}</td>
+            <td>${row[12]}</td>
+        `;
+
+        tbody.appendChild(tr);
+    }
+}
+
+// 📊 Summary
+function updateSummary(){
+
+    let totalQty = 0;
+    let count = 0;
+
+    for(let i=1;i<filteredData.length;i++){
+        totalQty += parseFloat(filteredData[i][6])||0;
+        count++;
+    }
+
+    document.getElementById("summaryBox").innerHTML =
+        "Total Cancel Count: "+count+" | Total Cancel Qty: "+totalQty;
+}
+
+</script>
+
+</body>
+</html>

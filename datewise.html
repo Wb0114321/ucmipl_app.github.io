@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Date Wise Report</title>
+
+<style>
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--accent:#4caf50;
+--warn:#ffd54f;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:var(--bg);
+color:var(--text);
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+padding:12px;
+background:#061529;
+position:sticky;
+top:0;
+}
+
+.back{
+background:var(--primary);
+border:none;
+padding:10px;
+border-radius:8px;
+margin-right:10px;
+}
+
+/* CONTROLS */
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+}
+
+input,select,button{
+padding:12px;
+border:none;
+border-radius:10px;
+background:var(--card);
+color:white;
+}
+
+button{
+background:var(--primary);
+color:#000;
+font-weight:bold;
+}
+
+/* SUMMARY */
+.popup{
+margin:10px;
+padding:12px;
+background:linear-gradient(135deg,#00d4ff,#007bff);
+border-radius:10px;
+font-weight:bold;
+}
+
+/* TABLE */
+.table-box{
+margin:10px;
+background:var(--card);
+border-radius:10px;
+overflow:auto;
+max-height:60vh;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#112a55;
+padding:10px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #1e3a5f;
+text-align:center;
+}
+
+/* highlight */
+.high-trips{ background:var(--warn); }
+.high-qty{ background:var(--accent); }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<button class="back" onclick="goBack()">←</button>
+<h3>Date Wise</h3>
+</div>
+
+<div class="controls">
+<select id="monthFilter" onchange="applyFilter()">
+<option value="">All Months</option>
+</select>
+
+<button onclick="manualRefresh()">🔄 Refresh</button>
+
+<input type="date" id="fromDate">
+<input type="date" id="toDate">
+
+<button onclick="applyFilter()">Apply Filter</button>
+</div>
+
+<div id="popup" class="popup"></div>
+
+<div class="table-box">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Trips</th>
+<th>Qty</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+
+function goBack(){
+window.location.href="dashboard.html";
+}
+
+const API_URL="https://script.google.com/macros/s/AKfycbxw62KUe8BisECVvUZLdIfsY974NOo-Su6peL6AcdQ3u_s1GAAyRwSOou3181qbmW10fg/exec";
+
+let fullData=[];
+
+/* CACHE */
+const CACHE_KEY="date_cache";
+const CACHE_TIME=5*60*1000;
+
+async function loadData(){
+
+let cache=localStorage.getItem(CACHE_KEY);
+
+if(cache){
+let parsed=JSON.parse(cache);
+
+if(Date.now()-parsed.time < CACHE_TIME){
+fullData=parsed.data;
+setupMonths();
+applyFilter();
+return;
+}
+}
+
+let res=await fetch(API_URL);
+let data=await res.json();
+
+fullData=data;
+
+localStorage.setItem(CACHE_KEY,JSON.stringify({
+time:Date.now(),
+data:fullData
+}));
+
+setupMonths();
+applyFilter();
+}
+
+/* AUTO REFRESH */
+setInterval(loadData,60000);
+
+function manualRefresh(){
+localStorage.removeItem(CACHE_KEY);
+loadData();
+}
+
+/* DATE FORMAT FIX */
+function formatDate(dateStr){
+
+let d = new Date(dateStr);
+
+// timezone fix
+d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+
+return d.toLocaleDateString('en-GB'); // dd/mm/yyyy
+}
+
+/* MONTH DROPDOWN */
+function setupMonths(){
+
+let select=document.getElementById("monthFilter");
+select.innerHTML='<option value="">All Months</option>';
+
+let months=new Map();
+
+for(let i=1;i<fullData.length;i++){
+
+let d=new Date(fullData[i][0]);
+d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+
+let key=d.getFullYear()+"-"+(d.getMonth()+1);
+let name=d.toLocaleString('default',{month:'long'});
+
+months.set(key,name);
+}
+
+months.forEach((name,key)=>{
+let opt=document.createElement("option");
+opt.value=key;
+opt.text=name;
+select.appendChild(opt);
+});
+}
+
+/* FILTER */
+function applyFilter(){
+
+let selected=document.getElementById("monthFilter").value;
+let from=document.getElementById("fromDate").value;
+let to=document.getElementById("toDate").value;
+
+let tbody=document.getElementById("tbody");
+tbody.innerHTML="";
+
+let totalTrips=0,totalQty=0;
+let maxTrips=0,maxQty=0;
+
+let temp=[];
+
+for(let i=1;i<fullData.length;i++){
+
+let d=new Date(fullData[i][0]);
+d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+
+let ok=true;
+
+if(selected){
+let key=d.getFullYear()+"-"+(d.getMonth()+1);
+if(key!==selected) ok=false;
+}
+
+if(from && to){
+if(!(d>=new Date(from)&&d<=new Date(to))) ok=false;
+}
+
+if(ok) temp.push(fullData[i]);
+}
+
+/* MAX */
+temp.forEach(r=>{
+maxTrips=Math.max(maxTrips,parseFloat(r[1])||0);
+maxQty=Math.max(maxQty,parseFloat(r[2])||0);
+});
+
+/* RENDER */
+temp.forEach(r=>{
+
+let t=parseFloat(r[1])||0;
+let q=parseFloat(r[2])||0;
+
+totalTrips+=t;
+totalQty+=q;
+
+let tr=document.createElement("tr");
+
+tr.innerHTML=`
+<td>${formatDate(r[0])}</td>
+<td class="${t===maxTrips?'high-trips':''}">${t}</td>
+<td class="${q===maxQty?'high-qty':''}">${q.toFixed(2)}</td>
+<td>${r[3] || ''}</td>
+`;
+
+tbody.appendChild(tr);
+});
+
+/* SUMMARY */
+document.getElementById("popup").innerHTML=
+`Trips: ${totalTrips} | Qty: ${totalQty.toFixed(2)}`;
+}
+
+/* START */
+loadData();
+
+</script>
+
+</body>
+</html>

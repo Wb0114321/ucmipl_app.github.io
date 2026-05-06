@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Month Wise Report</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+--bg:#020c1b; --card:#0f1f3d; --text:#e6f1ff; --primary:#00d4ff;
+}
+body{font-family:Arial;background:var(--bg);color:var(--text);margin:0;}
+.header{display:flex;align-items:center;padding:12px;background:#061529;position:sticky;top:0;}
+.back{background:var(--primary);border:none;padding:10px;border-radius:8px;margin-right:10px;}
+.container{padding:12px;}
+button{padding:12px;border:none;border-radius:10px;background:var(--primary);color:#000;font-weight:bold;width:100%;margin-bottom:10px;}
+.table-container{background:var(--card);border-radius:12px;overflow:auto;}
+table{width:100%;border-collapse:collapse;}
+th{background:#112a55;padding:12px;}
+td{padding:12px;border-bottom:1px solid #1e3a5f;text-align:center;}
+
+.chart-overlay{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:#000000e0;display:none;z-index:200;padding:15px;overflow:auto;
+}
+.chart-box{background:#0f1f3d;padding:15px;border-radius:12px;margin-bottom:20px;}
+.close-btn{background:red;color:white;margin-bottom:10px;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<button class="back" onclick="goBack()">←</button>
+<h3>Month Report</h3>
+</div>
+
+
+<div class="table-container">
+<table id="table">
+<thead>
+<tr><th>Month</th><th>Trips</th><th>Qty</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div class="container" id="reportArea">
+
+<button onclick="toggleCharts()">📊 Show Charts</button>
+<button onclick="downloadPDF()">📄 Download PDF</button>
+
+</div>
+
+<div id="chartOverlay" class="chart-overlay">
+<button class="close-btn" onclick="toggleCharts()">❌ Close</button>
+<div class="chart-box"><canvas id="barChart"></canvas></div>
+<div class="chart-box"><canvas id="pieChart"></canvas></div>
+<div class="chart-box"><canvas id="lineChart"></canvas></div>
+</div>
+
+<script>
+
+function goBack(){ window.location.href="dashboard.html"; }
+
+// 👉 APPS SCRIPT URL YAHAN DAAL
+const API_URL = "https://script.google.com/macros/s/AKfycbzJ8HFA_3lxDYGajwjgHwFT8TkDahk2YxPy8VVC9CSl_BNjAOjJh_hopAkZ2qkOY80Gpg/exec";
+
+let monthData = [];
+
+// 🔥 CACHE (client side)
+const CACHE_KEY="month_cache";
+const CACHE_TIME=5*60*1000;
+
+async function loadData(){
+
+let cache=localStorage.getItem(CACHE_KEY);
+
+if(cache){
+let parsed=JSON.parse(cache);
+if(Date.now()-parsed.time < CACHE_TIME){
+monthData=parsed.data;
+renderTable();
+renderCharts();
+return;
+}
+}
+
+let res=await fetch(API_URL);
+let data=await res.json();
+
+monthData=data;
+
+localStorage.setItem(CACHE_KEY,JSON.stringify({
+time:Date.now(),
+data:monthData
+}));
+
+renderTable();
+renderCharts();
+}
+
+function renderTable(){
+let tbody=document.querySelector("#table tbody");
+tbody.innerHTML="";
+
+monthData.forEach(r=>{
+let tr=document.createElement("tr");
+tr.innerHTML=`
+<td>${r.month}</td>
+<td>${r.trips}</td>
+<td>${r.qty.toFixed(2)}</td>
+`;
+tbody.appendChild(tr);
+});
+}
+
+function renderCharts(){
+
+let labels=monthData.map(x=>x.month);
+let trips=monthData.map(x=>x.trips);
+let qty=monthData.map(x=>x.qty);
+
+new Chart(document.getElementById("barChart"),{
+type:'bar',
+data:{labels,datasets:[{label:"Trips",data:trips},{label:"Qty",data:qty}]}
+});
+
+new Chart(document.getElementById("pieChart"),{
+type:'pie',
+data:{labels,datasets:[{data:trips}]}
+});
+
+new Chart(document.getElementById("lineChart"),{
+type:'line',
+data:{labels,datasets:[{label:"Qty",data:qty}]}
+});
+}
+
+function toggleCharts(){
+let el=document.getElementById("chartOverlay");
+el.style.display = (el.style.display==="block")?"none":"block";
+}
+
+function downloadPDF(){
+const {jsPDF}=window.jspdf;
+html2canvas(document.getElementById("reportArea")).then(canvas=>{
+let img=canvas.toDataURL("image/png");
+let pdf=new jsPDF('landscape','mm','a3');
+pdf.addImage(img,'PNG',10,10,400,250);
+pdf.save("Month_Report.pdf");
+});
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>

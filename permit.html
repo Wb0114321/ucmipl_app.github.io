@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Permit Details</title>
+
+<style>
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--accent:#4caf50;
+--danger:#ff5252;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:var(--bg);
+color:var(--text);
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+padding:12px;
+background:#061529;
+position:sticky;
+top:0;
+}
+
+.back{
+background:var(--primary);
+border:none;
+padding:10px;
+border-radius:8px;
+margin-right:10px;
+}
+
+/* BUTTON */
+.btn{
+margin:10px;
+padding:12px;
+border:none;
+border-radius:10px;
+background:var(--primary);
+color:#000;
+font-weight:bold;
+width:calc(100% - 20px);
+}
+
+/* SUMMARY CARDS */
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+}
+
+.card{
+background:linear-gradient(135deg,#00d4ff,#007bff);
+padding:12px;
+border-radius:12px;
+text-align:center;
+font-weight:bold;
+}
+
+.card span{
+display:block;
+font-size:18px;
+margin-top:5px;
+}
+
+/* TABLE */
+.table-box{
+margin:10px;
+background:var(--card);
+border-radius:12px;
+overflow:auto;
+max-height:65vh;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#112a55;
+padding:12px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #1e3a5f;
+text-align:center;
+}
+
+/* STATUS */
+.completed{color:var(--accent);font-weight:bold;}
+.running{color:var(--danger);font-weight:bold;}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<button class="back" onclick="goBack()">←</button>
+<h3>Permit Details</h3>
+</div>
+
+<button class="btn" onclick="toggleSummary()">📊 Show Summary</button>
+
+<!-- SUMMARY CARDS -->
+<div class="cards" id="summaryBox" style="display:none;">
+<div class="card">Credit <span id="c1">0</span></div>
+<div class="card">Lifted <span id="c2">0</span></div>
+<div class="card">Balance <span id="c3">0</span></div>
+<div class="card">Permits <span id="c4">0</span></div>
+</div>
+
+<div class="table-box">
+<table>
+<thead>
+<tr>
+<th>Permit</th>
+<th>Credit</th>
+<th>Balance</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+
+function goBack(){
+window.location.href="dashboard.html";
+}
+
+// 🔥 YOUR APPS SCRIPT URL
+const API_URL="https://script.google.com/macros/s/AKfycbxzlNpr5qkoS6tt4lsK9fk602CGrxRc2LEZqtZ-OcMFnGTvqUghAOvmOZZYVZiN9aSwqg/exec";
+
+let fullData=[];
+
+/* CACHE */
+const CACHE_KEY="permit_cache";
+const CACHE_TIME=5*60*1000;
+
+async function loadData(){
+
+let cache=localStorage.getItem(CACHE_KEY);
+
+if(cache){
+let parsed=JSON.parse(cache);
+if(Date.now()-parsed.time < CACHE_TIME){
+fullData=parsed.data;
+renderAll();
+return;
+}
+}
+
+let res=await fetch(API_URL);
+let data=await res.json();
+
+fullData=data;
+
+localStorage.setItem(CACHE_KEY,JSON.stringify({
+time:Date.now(),
+data:fullData
+}));
+
+renderAll();
+}
+
+/* AUTO REFRESH */
+setInterval(loadData,60000);
+
+/* RENDER */
+function renderAll(){
+
+let tbody=document.getElementById("tbody");
+tbody.innerHTML="";
+
+let totalCredit=0,totalLifted=0,totalBalance=0,count=0;
+
+for(let i=1;i<fullData.length;i++){
+
+let permit=fullData[i][1];
+if(!permit) continue;
+
+let credit=parseFloat(fullData[i][2])||0;
+let lifted=parseFloat(fullData[i][4])||0;
+let balance=parseFloat(fullData[i][5])||0;
+let status=fullData[i][8]||"";
+
+count++;
+
+totalCredit+=credit;
+totalLifted+=lifted;
+totalBalance+=balance;
+
+let tr=document.createElement("tr");
+
+tr.innerHTML=`
+<td>${permit}</td>
+<td>${credit}</td>
+<td>${balance}</td>
+<td class="${status==='COMPLETED'?'completed':'running'}">${status}</td>
+`;
+
+tbody.appendChild(tr);
+}
+
+/* SUMMARY */
+document.getElementById("c1").innerText=totalCredit;
+document.getElementById("c2").innerText=totalLifted;
+document.getElementById("c3").innerText=totalBalance;
+document.getElementById("c4").innerText=count;
+}
+
+/* TOGGLE */
+function toggleSummary(){
+let box=document.getElementById("summaryBox");
+box.style.display=(box.style.display==="none")?"grid":"none";
+}
+
+/* START */
+loadData();
+
+</script>
+
+</body>
+</html>
