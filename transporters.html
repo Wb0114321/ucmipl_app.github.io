@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta http-equiv="Content-Security-Policy"
+content="default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
+
+<title>Transporters</title>
+
+<style>
+
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--success:#4caf50;
+--danger:#ff5252;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+height:100%;
+overflow:hidden;
+font-family:Arial,sans-serif;
+background:var(--bg);
+color:var(--text);
+}
+
+/* APP */
+.app{
+display:flex;
+flex-direction:column;
+height:100vh;
+overflow:hidden;
+}
+
+/* HEADER */
+.header{
+padding:15px;
+background:#061529;
+position:sticky;
+top:0;
+z-index:100;
+text-align:center;
+box-shadow:0 2px 10px rgba(0,0,0,.4);
+flex-shrink:0;
+}
+
+.header h2{
+font-size:22px;
+color:#00d4ff;
+}
+
+/* SEARCH */
+.search-box{
+padding:10px;
+background:#020c1b;
+position:sticky;
+top:0;
+z-index:99;
+flex-shrink:0;
+}
+
+.search-box input,
+.search-box select{
+width:100%;
+padding:14px;
+margin-bottom:10px;
+border:none;
+border-radius:12px;
+background:var(--card);
+color:white;
+font-size:15px;
+outline:none;
+}
+
+/* STATUS BAR */
+.status-bar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#112a55;
+padding:10px;
+border-radius:10px;
+font-size:13px;
+font-weight:bold;
+}
+
+.online{
+color:#7CFC00;
+}
+
+.offline{
+color:#ff8080;
+}
+
+/* SUMMARY */
+.summary{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+flex-shrink:0;
+}
+
+.card{
+background:linear-gradient(135deg,#00d4ff,#007bff);
+padding:15px;
+border-radius:14px;
+text-align:center;
+font-weight:bold;
+color:#000;
+box-shadow:0 4px 10px rgba(0,0,0,.3);
+}
+
+.card span{
+display:block;
+font-size:22px;
+margin-top:8px;
+}
+
+/* COUNT */
+.count-box{
+background:#112a55;
+padding:12px;
+border-radius:10px;
+margin:10px;
+text-align:center;
+font-weight:bold;
+flex-shrink:0;
+}
+
+/* LIST */
+.list-container{
+flex:1;
+overflow:hidden;
+padding:0 10px 10px 10px;
+}
+
+.list-box{
+height:100%;
+overflow:auto;
+
+-webkit-overflow-scrolling:touch;
+overscroll-behavior:contain;
+scroll-behavior:smooth;
+touch-action:pan-y;
+padding-bottom:120px;
+}
+
+/* CARD */
+.vehicle-card{
+background:var(--card);
+padding:14px;
+border-radius:14px;
+margin-bottom:12px;
+box-shadow:0 4px 10px rgba(0,0,0,.3);
+border-left:5px solid #00d4ff;
+animation:fadeIn .2s linear;
+}
+
+@keyframes fadeIn{
+
+from{
+opacity:0;
+transform:translateY(10px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
+.vehicle-card h3{
+font-size:18px;
+margin-bottom:10px;
+color:#00d4ff;
+}
+
+.vehicle-card p{
+margin:5px 0;
+font-size:14px;
+line-height:1.5;
+}
+
+/* STATUS */
+.active{
+color:#7CFC00;
+font-weight:bold;
+}
+
+.expired{
+color:#ff8080;
+font-weight:bold;
+}
+
+/* BUTTON */
+.btn-row{
+display:flex;
+gap:10px;
+margin-top:12px;
+}
+
+.btn{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+font-size:14px;
+}
+
+.call-btn{
+background:#4caf50;
+color:white;
+}
+
+.copy-btn{
+background:#00d4ff;
+color:black;
+}
+
+/* LOADING */
+.loading{
+padding:20px;
+text-align:center;
+}
+
+/* EMPTY */
+.empty{
+padding:30px;
+text-align:center;
+opacity:.7;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+
+.summary{
+grid-template-columns:1fr 1fr;
+}
+
+.vehicle-card{
+padding:12px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- HEADER -->
+<div class="header">
+
+<h2>🚛 Transporters</h2>
+
+</div>
+
+<!-- SEARCH -->
+<div class="search-box">
+
+<input type="text"
+id="search"
+placeholder="🔍 Search Vehicle / Transporter..."
+autocomplete="off">
+
+<select id="transporterFilter">
+
+<option value="">
+All Transporters
+</option>
+
+</select>
+
+<div class="status-bar">
+
+<div>
+🌐
+<span id="netStatus"
+class="online">
+
+ONLINE
+
+</span>
+</div>
+
+<div>
+🕒
+<span id="lastUpdate">
+
+--
+
+</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- SUMMARY -->
+<div class="summary">
+
+<div class="card">
+Transporters
+<span id="totalTransporters">0</span>
+</div>
+
+<div class="card">
+Vehicles
+<span id="totalVehicles">0</span>
+</div>
+
+</div>
+
+<!-- COUNT -->
+<div class="count-box"
+id="countBox">
+
+Showing 0 Vehicles
+
+</div>
+
+<!-- LIST -->
+<div class="list-container">
+
+<div class="list-box"
+id="listBox">
+
+<div class="loading">
+
+Loading...
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SCRIPT URL */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbxcW8jb4s-BofoHfNxywsjiwj_QAzdHYIj1mw60Allb4O_16ZwSubgFwBjnea4ELFL4/exec";
+
+/* CACHE */
+const CACHE_KEY =
+"transporters_offline_cache";
+
+const CACHE_TIME =
+24 * 60 * 60 * 1000;
+
+/* DATA */
+let fullData = [];
+
+let filteredData = [];
+
+let searchTimeout = null;
+
+/* SAFE */
+function safe(v){
+
+return String(v || "")
+.trim();
+
+}
+
+/* DATE */
+function isValid(dateStr){
+
+try{
+
+if(!dateStr)
+return false;
+
+let d =
+new Date(dateStr);
+
+if(isNaN(d.getTime()))
+return false;
+
+return d >= new Date();
+
+}catch(e){
+
+return false;
+
+}
+
+}
+
+/* TIME */
+function updateTime(){
+
+document.getElementById(
+"lastUpdate"
+).innerText =
+new Date()
+.toLocaleTimeString();
+
+}
+
+/* NETWORK */
+function updateNetworkStatus(){
+
+let el =
+document.getElementById(
+"netStatus"
+);
+
+if(navigator.onLine){
+
+el.innerText =
+"ONLINE";
+
+el.className =
+"online";
+
+}else{
+
+el.innerText =
+"OFFLINE CACHE";
+
+el.className =
+"offline";
+
+}
+
+}
+
+/* LOAD */
+function loadData(showLoader=true){
+
+if(showLoader){
+
+document.getElementById(
+"listBox"
+).innerHTML =
+`
+<div class="loading">
+Loading...
+</div>
+`;
+
+}
+
+/* CACHE FIRST */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
+
+if(cache){
+
+let parsed =
+JSON.parse(cache);
+
+fullData =
+parsed.data;
+
+setupFilters();
+
+applyFilter();
+
+}
+
+}catch(e){}
+
+/* INTERNET */
+if(!navigator.onLine){
+
+updateNetworkStatus();
+
+return;
+
+}
+
+/* XHR */
+let xhr =
+new XMLHttpRequest();
+
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
+
+try{
+
+let data =
+JSON.parse(
+xhr.responseText
+);
+
+if(
+JSON.stringify(data)
+!==
+JSON.stringify(fullData)
+){
+
+fullData =
+data;
+
+/* SAVE CACHE */
+try{
+
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
+time:Date.now(),
+data:fullData
+})
+);
+
+}catch(e){}
+
+/* UPDATE */
+setupFilters();
+
+applyFilter();
+
+}
+
+updateTime();
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+}
+
+};
+
+xhr.send();
+
+}
+
+/* FILTER SETUP */
+function setupFilters(){
+
+let set =
+new Set();
+
+let vehicles = 0;
+
+for(
+let i=1;
+i<fullData.length;
+i++
+){
+
+let row =
+fullData[i];
+
+let transporter =
+safe(row[1]);
+
+if(transporter){
+
+set.add(transporter);
+
+}
+
+if(safe(row[3])){
+
+vehicles++;
+
+}
+
+}
+
+/* UI */
+document.getElementById(
+"totalTransporters"
+).innerText =
+set.size.toLocaleString();
+
+document.getElementById(
+"totalVehicles"
+).innerText =
+vehicles.toLocaleString();
+
+/* DROPDOWN */
+let select =
+document.getElementById(
+"transporterFilter"
+);
+
+let old =
+select.value;
+
+select.innerHTML =
+`
+<option value="">
+All Transporters
+</option>
+`;
+
+Array.from(set)
+.sort()
+.forEach(t=>{
+
+let opt =
+document.createElement(
+"option"
+);
+
+opt.value = t;
+
+opt.text = t;
+
+select.appendChild(opt);
+
+});
+
+select.value = old;
+
+}
+
+/* FILTER */
+function applyFilter(){
+
+let search =
+document.getElementById(
+"search"
+).value.toLowerCase();
+
+let filter =
+document.getElementById(
+"transporterFilter"
+).value.toLowerCase();
+
+let box =
+document.getElementById(
+"listBox"
+);
+
+box.innerHTML = "";
+
+let count = 0;
+
+for(
+let i=1;
+i<fullData.length;
+i++
+){
+
+let row =
+fullData[i];
+
+if(!row)
+continue;
+
+let transporter =
+safe(row[1]);
+
+let agno =
+safe(row[2]);
+
+let vehicle =
+safe(row[3]);
+
+let body =
+safe(row[4]);
+
+let wheeler =
+safe(row[5]);
+
+let laden =
+safe(row[6]);
+
+let unladen =
+safe(row[7]);
+
+let fitness =
+safe(row[8]);
+
+let insurance =
+safe(row[10]);
+
+let permit =
+safe(row[12]);
+
+let remarks =
+safe(row[15]);
+
+/* SEARCH */
+let full =
+row.join(" ")
+.toLowerCase();
+
+if(
+search &&
+!full.includes(search)
+)
+continue;
+
+/* FILTER */
+if(
+filter &&
+transporter.toLowerCase() !== filter
+)
+continue;
+
+count++;
+
+let active =
+isValid(permit);
+
+let div =
+document.createElement(
+"div"
+);
+
+div.className =
+"vehicle-card";
+
+div.innerHTML =
+`
+<h3>
+${transporter}
+</h3>
+
+<p>
+🚛 Vehicle :
+<b>${vehicle}</b>
+</p>
+
+<p>
+🆔 AG No :
+${agno}
+</p>
+
+<p>
+🚚 Body :
+${body}
+</p>
+
+<p>
+🛞 Wheeler :
+${wheeler}
+</p>
+
+<p>
+⚖ Laden :
+${laden}
+</p>
+
+<p>
+⚖ Unladen :
+${unladen}
+</p>
+
+<p>
+📅 Fitness :
+${fitness}
+</p>
+
+<p>
+🛡 Insurance :
+${insurance}
+</p>
+
+<p>
+📄 Permit :
+${permit}
+</p>
+
+<p class="${
+active
+?
+'active'
+:
+'expired'
+}">
+${
+active
+?
+'✅ ACTIVE'
+:
+'❌ EXPIRED'
+}
+</p>
+
+<p>
+📝 ${remarks}
+</p>
+
+<div class="btn-row">
+
+<button class="btn call-btn"
+onclick="callNow('${agno}')">
+
+📞 Call
+
+</button>
+
+<button class="btn copy-btn"
+onclick="copyVehicle('${vehicle}')">
+
+📋 Copy
+
+</button>
+
+</div>
+`;
+
+box.appendChild(div);
+
+}
+
+/* EMPTY */
+if(count === 0){
+
+box.innerHTML =
+`
+<div class="empty">
+No Vehicles Found
+</div>
+`;
+
+}
+
+/* COUNT */
+document.getElementById(
+"countBox"
+).innerText =
+`Showing ${count.toLocaleString()} Vehicles`;
+
+}
+
+/* FAST SEARCH */
+document.getElementById(
+"search"
+).addEventListener(
+"input",
+function(){
+
+clearTimeout(
+searchTimeout
+);
+
+searchTimeout =
+setTimeout(
+applyFilter,
+100
+);
+
+}
+);
+
+/* FILTER EVENT */
+document.getElementById(
+"transporterFilter"
+).addEventListener(
+"change",
+applyFilter
+);
+
+/* CALL */
+function callNow(no){
+
+window.location.href =
+"tel:" + no;
+
+}
+
+/* COPY */
+function copyVehicle(v){
+
+navigator.clipboard.writeText(v);
+
+}
+
+/* NETWORK */
+window.addEventListener(
+"online",
+function(){
+
+updateNetworkStatus();
+
+loadData(false);
+
+}
+);
+
+window.addEventListener(
+"offline",
+updateNetworkStatus
+);
+
+/* AUTO REFRESH */
+setInterval(
+function(){
+
+if(navigator.onLine){
+
+loadData(false);
+
+}
+
+},
+60000
+);
+
+/* START */
+updateNetworkStatus();
+
+loadData(true);
+
+</script>
+
+</body>
+
+</html>
