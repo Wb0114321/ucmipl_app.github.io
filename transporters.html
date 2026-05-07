@@ -61,7 +61,6 @@ align-items:center;
 gap:10px;
 }
 
-/* BACK */
 .back-btn{
 background:#00d4ff;
 color:#000;
@@ -72,7 +71,6 @@ font-weight:bold;
 font-size:15px;
 }
 
-/* TITLE */
 .header h2{
 font-size:22px;
 color:#00d4ff;
@@ -293,19 +291,6 @@ bottom:25px;
 
 }
 
-/* MOBILE */
-@media(max-width:600px){
-
-.summary{
-grid-template-columns:1fr 1fr;
-}
-
-.vehicle-card{
-padding:12px;
-}
-
-}
-
 </style>
 
 </head>
@@ -422,7 +407,7 @@ window.location.href =
 
 }
 
-/* APPS SCRIPT */
+/* APPS SCRIPT URL */
 const API_URL =
 "https://script.google.com/macros/s/AKfycbxcW8jb4s-BofoHfNxywsjiwj_QAzdHYIj1mw60Allb4O_16ZwSubgFwBjnea4ELFL4/exec";
 
@@ -659,7 +644,6 @@ vehicles++;
 
 }
 
-/* UI */
 document.getElementById(
 "totalTransporters"
 ).innerText =
@@ -670,7 +654,6 @@ document.getElementById(
 ).innerText =
 vehicles.toLocaleString();
 
-/* DROPDOWN */
 let select =
 document.getElementById(
 "transporterFilter"
@@ -774,6 +757,16 @@ safe(row[12]);
 let remarks =
 safe(row[15]);
 
+/* NEW CONTACT COLUMNS */
+/* R = 17 */
+/* S = 18 */
+
+let contact1 =
+safe(row[17]);
+
+let contact2 =
+safe(row[18]);
+
 /* SEARCH */
 let full =
 row.join(" ")
@@ -856,6 +849,16 @@ ${insurance}
 ${permit}
 </p>
 
+<p>
+📞 Contact 1 :
+<b>${contact1 || 'N/A'}</b>
+</p>
+
+<p>
+📞 Contact 2 :
+<b>${contact2 || 'N/A'}</b>
+</p>
+
 <p class="${
 active
 ?
@@ -879,16 +882,34 @@ active
 <div class="btn-row">
 
 <button class="btn call-btn"
-onclick="callNow('${agno}')">
+onclick="callNow('${contact1}')">
 
-📞 Call
+📞 Call 1
 
 </button>
+
+<button class="btn call-btn"
+onclick="callNow('${contact2}')">
+
+📞 Call 2
+
+</button>
+
+</div>
+
+<div class="btn-row">
 
 <button class="btn copy-btn"
 onclick="copyVehicle('${vehicle}')">
 
-📋 Copy
+📋 Copy Vehicle
+
+</button>
+
+<button class="btn copy-btn"
+onclick="copyVehicle('${contact1}')">
+
+📋 Copy No
 
 </button>
 
@@ -899,7 +920,6 @@ box.appendChild(div);
 
 }
 
-/* EMPTY */
 if(count === 0){
 
 box.innerHTML =
@@ -911,7 +931,6 @@ No Vehicles Found
 
 }
 
-/* COUNT */
 document.getElementById(
 "countBox"
 ).innerText =
@@ -952,10 +971,10 @@ function callNow(no){
 
 no = String(no || '').trim();
 
-if(!no || no === "1"){
+if(!no){
 
 showToast(
-"Valid Number Not Found"
+"Number Not Available"
 );
 
 return;
@@ -992,7 +1011,7 @@ console.log(e);
 
 }
 
-/* COPY VEHICLE */
+/* COPY */
 function copyVehicle(v){
 
 copyText(v);
@@ -1003,7 +1022,7 @@ showToast(
 
 }
 
-/* COPY */
+/* COPY FUNCTION */
 function copyText(txt){
 
 try{
