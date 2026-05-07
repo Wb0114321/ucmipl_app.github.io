@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="Content-Security-Policy"
+content="default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
 
 <title>Permit Details</title>
 
 <style>
+
 :root{
 --bg:#020c1b;
 --card:#0f1f3d;
@@ -15,11 +24,17 @@
 --danger:#ff5252;
 }
 
-body{
+*{
 margin:0;
-font-family:Arial;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,sans-serif;
 background:var(--bg);
 color:var(--text);
+overflow-x:hidden;
 }
 
 /* HEADER */
@@ -30,29 +45,34 @@ padding:12px;
 background:#061529;
 position:sticky;
 top:0;
+z-index:100;
 }
 
 .back{
 background:var(--primary);
 border:none;
-padding:10px;
-border-radius:8px;
+padding:10px 14px;
+border-radius:10px;
 margin-right:10px;
+font-size:18px;
+font-weight:bold;
+color:#000;
 }
 
 /* BUTTON */
 .btn{
 margin:10px;
-padding:12px;
+padding:14px;
 border:none;
 border-radius:10px;
 background:var(--primary);
 color:#000;
 font-weight:bold;
 width:calc(100% - 20px);
+font-size:15px;
 }
 
-/* SUMMARY CARDS */
+/* SUMMARY */
 .cards{
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -62,10 +82,11 @@ padding:10px;
 
 .card{
 background:linear-gradient(135deg,#00d4ff,#007bff);
-padding:12px;
+padding:14px;
 border-radius:12px;
 text-align:center;
 font-weight:bold;
+color:#000;
 }
 
 .card span{
@@ -86,148 +107,486 @@ max-height:65vh;
 table{
 width:100%;
 border-collapse:collapse;
+min-width:500px;
 }
 
 th{
 background:#112a55;
 padding:12px;
+position:sticky;
+top:0;
 }
 
 td{
 padding:10px;
 border-bottom:1px solid #1e3a5f;
 text-align:center;
+font-size:14px;
 }
 
 /* STATUS */
-.completed{color:var(--accent);font-weight:bold;}
-.running{color:var(--danger);font-weight:bold;}
+.completed{
+color:var(--accent);
+font-weight:bold;
+}
+
+.running{
+color:var(--danger);
+font-weight:bold;
+}
+
+.loading{
+padding:20px;
+text-align:center;
+}
 
 </style>
+
 </head>
 
 <body>
 
 <div class="header">
-<button class="back" onclick="goBack()">←</button>
+
+<button class="back"
+onclick="goBack()">
+←
+</button>
+
 <h3>Permit Details</h3>
+
 </div>
 
-<button class="btn" onclick="toggleSummary()">📊 Show Summary</button>
+<button class="btn"
+onclick="toggleSummary()">
 
-<!-- SUMMARY CARDS -->
-<div class="cards" id="summaryBox" style="display:none;">
-<div class="card">Credit <span id="c1">0</span></div>
-<div class="card">Lifted <span id="c2">0</span></div>
-<div class="card">Balance <span id="c3">0</span></div>
-<div class="card">Permits <span id="c4">0</span></div>
+📊 Show Summary
+
+</button>
+
+<!-- SUMMARY -->
+<div class="cards"
+id="summaryBox"
+style="display:none;">
+
+<div class="card">
+Credit
+<span id="c1">0</span>
+</div>
+
+<div class="card">
+Lifted
+<span id="c2">0</span>
+</div>
+
+<div class="card">
+Balance
+<span id="c3">0</span>
+</div>
+
+<div class="card">
+Permits
+<span id="c4">0</span>
+</div>
+
 </div>
 
 <div class="table-box">
+
 <table>
+
 <thead>
+
 <tr>
 <th>Permit</th>
 <th>Credit</th>
 <th>Balance</th>
 <th>Status</th>
 </tr>
+
 </thead>
-<tbody id="tbody"></tbody>
+
+<tbody id="tbody">
+
+<tr>
+<td colspan="4"
+class="loading">
+
+Loading...
+
+</td>
+</tr>
+
+</tbody>
+
 </table>
+
 </div>
 
 <script>
 
+/* BACK */
 function goBack(){
-window.location.href="dashboard.html";
+
+window.location.href =
+"dashboard.html";
+
 }
 
-// 🔥 YOUR APPS SCRIPT URL
-const API_URL="https://script.google.com/macros/s/AKfycbxzlNpr5qkoS6tt4lsK9fk602CGrxRc2LEZqtZ-OcMFnGTvqUghAOvmOZZYVZiN9aSwqg/exec";
-
-let fullData=[];
+/* API */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbxzlNpr5qkoS6tt4lsK9fk602CGrxRc2LEZqtZ-OcMFnGTvqUghAOvmOZZYVZiN9aSwqg/exec";
 
 /* CACHE */
-const CACHE_KEY="permit_cache";
-const CACHE_TIME=5*60*1000;
+const CACHE_KEY =
+"permit_cache";
 
-async function loadData(){
+const CACHE_TIME =
+5 * 60 * 1000;
 
-let cache=localStorage.getItem(CACHE_KEY);
+let fullData = [];
+
+/* SAFE NUMBER */
+function safeNumber(v){
+
+if(v === null || v === undefined)
+return 0;
+
+v = String(v)
+.replace(/,/g,'')
+.trim();
+
+let n = parseFloat(v);
+
+if(isNaN(n))
+return 0;
+
+return n;
+
+}
+
+/* LOAD DATA */
+function loadData(){
+
+let tbody =
+document.getElementById(
+"tbody"
+);
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4"
+class="loading">
+Loading...
+</td>
+</tr>
+`;
+
+/* CACHE */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
 
 if(cache){
-let parsed=JSON.parse(cache);
-if(Date.now()-parsed.time < CACHE_TIME){
-fullData=parsed.data;
+
+let parsed =
+JSON.parse(cache);
+
+if(
+Date.now() -
+parsed.time
+<
+CACHE_TIME
+){
+
+fullData =
+parsed.data;
+
 renderAll();
+
 return;
+
 }
+
 }
 
-let res=await fetch(API_URL);
-let data=await res.json();
+}catch(e){
 
-fullData=data;
+console.log(
+"cache error"
+);
 
-localStorage.setItem(CACHE_KEY,JSON.stringify({
+}
+
+/* XHR */
+let xhr =
+new XMLHttpRequest();
+
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
+
+try{
+
+let text =
+xhr.responseText;
+
+/* FIX EMPTY */
+if(!text || text.trim() === ""){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+No Data Returned
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+/* PARSE */
+let data =
+JSON.parse(text);
+
+fullData =
+data;
+
+/* SAVE CACHE */
+try{
+
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
 time:Date.now(),
 data:fullData
-}));
+})
+);
 
+}catch(e){}
+
+/* RENDER */
 renderAll();
+
+}catch(err){
+
+console.log(err);
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+JSON Parse Error
+</td>
+</tr>
+`;
+
+}
+
+}else{
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+Server Error
+</td>
+</tr>
+`;
+
+}
+
+}
+
+};
+
+xhr.onerror =
+function(){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+Network Error
+</td>
+</tr>
+`;
+
+};
+
+xhr.send();
+
 }
 
 /* AUTO REFRESH */
-setInterval(loadData,60000);
+setInterval(
+loadData,
+60000
+);
 
 /* RENDER */
 function renderAll(){
 
-let tbody=document.getElementById("tbody");
-tbody.innerHTML="";
+let tbody =
+document.getElementById(
+"tbody"
+);
 
-let totalCredit=0,totalLifted=0,totalBalance=0,count=0;
+tbody.innerHTML = "";
 
-for(let i=1;i<fullData.length;i++){
+let totalCredit = 0;
 
-let permit=fullData[i][1];
-if(!permit) continue;
+let totalLifted = 0;
 
-let credit=parseFloat(fullData[i][2])||0;
-let lifted=parseFloat(fullData[i][4])||0;
-let balance=parseFloat(fullData[i][5])||0;
-let status=fullData[i][8]||"";
+let totalBalance = 0;
+
+let count = 0;
+
+/* LOOP */
+for(
+let i=1;
+i<fullData.length;
+i++
+){
+
+let row =
+fullData[i];
+
+if(!row)
+continue;
+
+let permit =
+String(
+row[1] || ""
+).trim();
+
+if(!permit)
+continue;
+
+let credit =
+safeNumber(row[2]);
+
+let lifted =
+safeNumber(row[4]);
+
+let balance =
+safeNumber(row[5]);
+
+let status =
+String(
+row[8] || ""
+).trim();
 
 count++;
 
-totalCredit+=credit;
-totalLifted+=lifted;
-totalBalance+=balance;
+totalCredit += credit;
+totalLifted += lifted;
+totalBalance += balance;
 
-let tr=document.createElement("tr");
+/* ROW */
+let tr =
+document.createElement(
+"tr"
+);
 
-tr.innerHTML=`
-<td>${permit}</td>
-<td>${credit}</td>
-<td>${balance}</td>
-<td class="${status==='COMPLETED'?'completed':'running'}">${status}</td>
+tr.innerHTML =
+`
+<td>
+${permit}
+</td>
+
+<td>
+${credit.toLocaleString()}
+</td>
+
+<td>
+${balance.toLocaleString()}
+</td>
+
+<td class="${
+status === 'COMPLETED'
+?
+'completed'
+:
+'running'
+}">
+${status}
+</td>
 `;
 
 tbody.appendChild(tr);
+
+}
+
+/* EMPTY */
+if(count === 0){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+No Data Found
+</td>
+</tr>
+`;
+
 }
 
 /* SUMMARY */
-document.getElementById("c1").innerText=totalCredit;
-document.getElementById("c2").innerText=totalLifted;
-document.getElementById("c3").innerText=totalBalance;
-document.getElementById("c4").innerText=count;
+document.getElementById(
+"c1"
+).innerText =
+totalCredit.toLocaleString();
+
+document.getElementById(
+"c2"
+).innerText =
+totalLifted.toLocaleString();
+
+document.getElementById(
+"c3"
+).innerText =
+totalBalance.toLocaleString();
+
+document.getElementById(
+"c4"
+).innerText =
+count.toLocaleString();
+
 }
 
 /* TOGGLE */
 function toggleSummary(){
-let box=document.getElementById("summaryBox");
-box.style.display=(box.style.display==="none")?"grid":"none";
+
+let box =
+document.getElementById(
+"summaryBox"
+);
+
+box.style.display =
+(
+box.style.display === "none"
+)
+?
+"grid"
+:
+"none";
+
 }
 
 /* START */
@@ -236,4 +595,5 @@ loadData();
 </script>
 
 </body>
+
 </html>
