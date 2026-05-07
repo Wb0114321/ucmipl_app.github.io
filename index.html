@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
@@ -94,6 +97,7 @@ border-radius:18px;
 text-align:center;
 font-weight:700;
 box-shadow:0 8px 20px rgba(0,212,255,0.18);
+color:#000;
 }
 
 .scard span{
@@ -109,6 +113,7 @@ display:grid;
 grid-template-columns:1fr 1fr;
 gap:12px;
 margin-top:14px;
+padding-bottom:50px;
 }
 
 .card{
@@ -119,10 +124,11 @@ padding:18px 14px;
 border-radius:22px;
 cursor:pointer;
 transition:.2s;
-min-height:105px;
+min-height:110px;
 display:flex;
 flex-direction:column;
 justify-content:center;
+box-shadow:0 5px 20px rgba(0,0,0,.25);
 }
 
 .card:active{
@@ -178,13 +184,14 @@ font-size:18px;
 }
 
 .card{
-min-height:95px;
+min-height:100px;
 padding:16px 12px;
 }
 
 }
 
 </style>
+
 </head>
 
 <body>
@@ -193,7 +200,11 @@ padding:16px 12px;
 
 <!-- TOP -->
 <div class="topbar">
-<div class="logo">UCMIPL</div>
+
+<div class="logo">
+UCMIPL
+</div>
+
 </div>
 
 <!-- HERO -->
@@ -236,131 +247,358 @@ Remaining
 <!-- MENU -->
 <div class="grid">
 
-<div class="card" onclick="go('dpr.html')">
-<div class="icon">📄</div>
-<div class="title">DPR Report</div>
-<div class="desc">Daily dispatch report summary</div>
+<!-- DPR -->
+<div class="card"
+onclick="go('dpr.html')">
+
+<div class="icon">
+📄
 </div>
 
-<div class="card" onclick="go('datewise.html')">
-<div class="icon">📅</div>
-<div class="title">Date Wise</div>
-<div class="desc">Daily trip & qty details</div>
+<div class="title">
+DPR Report
 </div>
 
-<div class="card" onclick="go('monthwise.html')">
-<div class="icon">🗓️</div>
-<div class="title">Month Wise</div>
-<div class="desc">Monthly summary & charts</div>
-</div>
-
-<div class="card" onclick="go('permit.html')">
-<div class="icon">✅</div>
-<div class="title">Permit Details</div>
-<div class="desc">Credit & balance permits</div>
-</div>
-
-<div class="card" onclick="go('cancel.html')">
-<div class="icon">❌</div>
-<div class="title">Cancelled Epass</div>
-<div class="desc">Cancelled permit tracking</div>
-</div>
-
-<div class="card" onclick="go('live_dispatch.html')">
-<div class="icon">🚚</div>
-<div class="title">Live Dispatch</div>
-<div class="desc">Real time vehicle dispatch</div>
-</div>
-
-<div class="card" onclick="go('Summarytg.html')">
-<div class="icon">📊</div>
-<div class="title">Target Dashboard</div>
-<div class="desc">Target vs achievement monitor</div>
+<div class="desc">
+Daily dispatch report summary
 </div>
 
 </div>
 
-<div class="loading" id="loading">
+<!-- DATEWISE -->
+<div class="card"
+onclick="go('datewise.html')">
+
+<div class="icon">
+📅
+</div>
+
+<div class="title">
+Date Wise
+</div>
+
+<div class="desc">
+Daily trip & qty details
+</div>
+
+</div>
+
+<!-- MONTHWISE -->
+<div class="card"
+onclick="go('monthwise.html')">
+
+<div class="icon">
+🗓️
+</div>
+
+<div class="title">
+Month Wise
+</div>
+
+<div class="desc">
+Monthly summary & charts
+</div>
+
+</div>
+
+<!-- PERMIT -->
+<div class="card"
+onclick="go('permit.html')">
+
+<div class="icon">
+✅
+</div>
+
+<div class="title">
+Permit Details
+</div>
+
+<div class="desc">
+Credit & balance permits
+</div>
+
+</div>
+
+<!-- CANCEL -->
+<div class="card"
+onclick="go('cancel.html')">
+
+<div class="icon">
+❌
+</div>
+
+<div class="title">
+Cancelled Epass
+</div>
+
+<div class="desc">
+Cancelled permit tracking
+</div>
+
+</div>
+
+<!-- LIVE -->
+<div class="card"
+onclick="go('live_dispatch.html')">
+
+<div class="icon">
+🚚
+</div>
+
+<div class="title">
+Live Dispatch
+</div>
+
+<div class="desc">
+Real time vehicle dispatch
+</div>
+
+</div>
+
+<!-- TARGET -->
+<div class="card"
+onclick="go('Summarytg.html')">
+
+<div class="icon">
+📊
+</div>
+
+<div class="title">
+Target Dashboard
+</div>
+
+<div class="desc">
+Target vs achievement monitor
+</div>
+
+</div>
+
+<!-- TRANSPORTERS -->
+<div class="card"
+onclick="go('transporters.html')">
+
+<div class="icon">
+🚛
+</div>
+
+<div class="title">
+Transporters
+</div>
+
+<div class="desc">
+Transporter & vehicle details
+</div>
+
+</div>
+
+</div>
+
+<!-- LOADING -->
+<div class="loading"
+id="loading">
+
 Loading summary...
+
 </div>
 
 </div>
 
 <script>
 
-// NAVIGATION
+/* NAVIGATION */
 function go(page){
-window.location.href = page;
+
+window.location.href =
+page;
+
 }
 
-// API
+/* API */
 const API_URL =
 "https://script.google.com/macros/s/AKfycbw7gp0-WUVigLKt8Saced-bkuU-BEQXjJx82tIvUnKPxfEfDckpvQr2zg4ExrYfRdA1pA/exec";
 
-const TARGET = 4000000;
+const TARGET =
+4000000;
 
-// LOAD SUMMARY
-async function loadSummary(){
+/* CACHE */
+const CACHE_KEY =
+"dashboard_summary_cache";
+
+const CACHE_TIME =
+5 * 60 * 1000;
+
+/* LOAD */
+function loadSummary(){
+
+/* CACHE */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
+
+if(cache){
+
+let parsed =
+JSON.parse(cache);
+
+if(
+Date.now() -
+parsed.time
+<
+CACHE_TIME
+){
+
+updateUI(
+parsed.total
+);
+
+}
+
+}
+
+}catch(e){}
+
+/* XHR */
+let xhr =
+new XMLHttpRequest();
+
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
 
 try{
 
-let res = await fetch(API_URL + "?t=" + Date.now());
-
-let data = await res.json();
+let data =
+JSON.parse(
+xhr.responseText
+);
 
 let total = 0;
 
-// skip header
-for(let i=1;i<data.length;i++){
+/* LOOP */
+for(
+let i=1;
+i<data.length;
+i++
+){
 
-let row = data[i];
+let row =
+data[i];
 
-if(!row || row.length < 3) continue;
+if(
+!row ||
+row.length < 3
+)
+continue;
 
-let qty = parseFloat(row[2]);
+let qty =
+parseFloat(
+row[2]
+);
 
 if(!isNaN(qty)){
+
 total += qty;
-}
 
 }
 
-let remaining = TARGET - total;
+}
 
-let percent = (total / TARGET) * 100;
+/* CACHE SAVE */
+try{
 
-// UI
-document.getElementById("t").innerText =
-TARGET.toLocaleString();
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
+time:Date.now(),
+total:total
+})
+);
 
-document.getElementById("a").innerText =
-total.toFixed(2);
+}catch(e){}
 
-document.getElementById("r").innerText =
-remaining.toFixed(2);
-
-document.getElementById("p").innerText =
-percent.toFixed(2) + "%";
-
-document.getElementById("loading").style.display="none";
+/* UI */
+updateUI(total);
 
 }catch(err){
 
 console.log(err);
 
-document.getElementById("loading").innerText =
+document.getElementById(
+"loading"
+).innerText =
 "Unable to load summary";
 
 }
 
 }
 
-// AUTO REFRESH
-loadSummary();
+}
 
-setInterval(loadSummary,60000);
+};
+
+xhr.send();
+
+}
+
+/* UI */
+function updateUI(total){
+
+let remaining =
+TARGET - total;
+
+let percent =
+(total / TARGET) * 100;
+
+document.getElementById(
+"t"
+).innerText =
+TARGET.toLocaleString();
+
+document.getElementById(
+"a"
+).innerText =
+total.toFixed(2);
+
+document.getElementById(
+"r"
+).innerText =
+remaining.toFixed(2);
+
+document.getElementById(
+"p"
+).innerText =
+percent.toFixed(2) + "%";
+
+document.getElementById(
+"loading"
+).style.display =
+"none";
+
+}
+
+/* AUTO REFRESH */
+setInterval(
+loadSummary,
+60000
+);
+
+/* START */
+loadSummary();
 
 </script>
 
 </body>
+
 </html>
