@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="Content-Security-Policy"
+content="default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
 
 <title>Live Dispatch</title>
 
 <style>
+
 :root{
 --bg:#020c1b;
 --card:#0f1f3d;
@@ -15,11 +24,17 @@
 --accent:#4caf50;
 }
 
-body{
+*{
 margin:0;
-font-family:Arial;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,sans-serif;
 background:var(--bg);
 color:var(--text);
+overflow-x:hidden;
 }
 
 /* HEADER */
@@ -36,16 +51,19 @@ z-index:100;
 .back{
 background:var(--primary);
 border:none;
-padding:10px;
-border-radius:8px;
+padding:10px 14px;
+border-radius:10px;
 margin-right:10px;
 font-weight:bold;
+font-size:18px;
+color:#000;
 }
 
 /* SEARCH */
 .search{
 padding:10px;
 }
+
 .search input{
 width:100%;
 padding:14px;
@@ -70,6 +88,7 @@ padding:12px;
 border-radius:12px;
 text-align:center;
 font-weight:bold;
+color:#000;
 }
 
 .card span{
@@ -90,11 +109,14 @@ max-height:60vh;
 table{
 width:100%;
 border-collapse:collapse;
+min-width:600px;
 }
 
 th{
 background:#112a55;
 padding:12px;
+position:sticky;
+top:0;
 }
 
 td{
@@ -105,8 +127,13 @@ font-size:14px;
 }
 
 /* STATUS */
-.pending{ background:var(--danger); }
-.done{ background:var(--accent); }
+.pending{
+background:#5a1f1f;
+}
+
+.done{
+background:#123b26;
+}
 
 /* BUTTON */
 .btn{
@@ -118,33 +145,82 @@ background:var(--primary);
 color:#000;
 font-weight:bold;
 width:calc(100% - 20px);
+font-size:15px;
 }
+
+/* LOADING */
+.loading{
+padding:20px;
+text-align:center;
+opacity:.8;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="header">
-<button class="back" onclick="goBack()">←</button>
+
+<button class="back"
+onclick="goBack()">
+←
+</button>
+
 <h3>Live Dispatch</h3>
+
 </div>
 
 <div class="search">
-<input type="text" id="search" placeholder="🔍 Search Vehicle..." onkeyup="renderAll()">
+
+<input type="text"
+id="search"
+placeholder="🔍 Search Vehicle..."
+onkeyup="renderAll()">
+
 </div>
 
 <div class="cards">
-<div class="card">Trucks <span id="c1">0</span></div>
-<div class="card">Gross <span id="c2">0</span></div>
-<div class="card">Pending <span id="c3">0</span></div>
-<div class="card">Double <span id="c4">0</span></div>
-<div class="card">Triple <span id="c5">0</span></div>
-<div class="card">Entries <span id="c6">0</span></div>
+
+<div class="card">
+Trucks
+<span id="c1">0</span>
+</div>
+
+<div class="card">
+Gross
+<span id="c2">0</span>
+</div>
+
+<div class="card">
+Pending
+<span id="c3">0</span>
+</div>
+
+<div class="card">
+Double
+<span id="c4">0</span>
+</div>
+
+<div class="card">
+Triple
+<span id="c5">0</span>
+</div>
+
+<div class="card">
+Entries
+<span id="c6">0</span>
+</div>
+
 </div>
 
 <div class="table-box">
+
 <table>
+
 <thead>
+
 <tr>
 <th>Vehicle</th>
 <th>Tare</th>
@@ -152,127 +228,438 @@ width:calc(100% - 20px);
 <th>Time</th>
 <th>TAT</th>
 </tr>
+
 </thead>
-<tbody id="tbody"></tbody>
+
+<tbody id="tbody">
+
+<tr>
+<td colspan="5"
+class="loading">
+
+Loading...
+
+</td>
+</tr>
+
+</tbody>
+
 </table>
+
 </div>
 
-<button class="btn" onclick="manualRefresh()">🔄 Refresh</button>
+<button class="btn"
+onclick="manualRefresh()">
+
+🔄 Refresh
+
+</button>
 
 <script>
 
+/* BACK */
 function goBack(){
-window.location.href="dashboard.html";
+
+window.location.href =
+"dashboard.html";
+
 }
 
-// 🔥 YOUR APPS SCRIPT URL
-const API_URL="https://script.google.com/macros/s/AKfycbz_d-7LEMHd9Aacm-8KNFnYP60NWAWeXrn6sN265htHUIp2ewhWip3a2TL2X35MbvxQvw/exec";
+/* API */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbz_d-7LEMHd9Aacm-8KNFnYP60NWAWeXrn6sN265htHUIp2ewhWip3a2TL2X35MbvxQvw/exec";
 
-let fullData=[];
+/* CACHE */
+const CACHE_KEY =
+"live_dispatch_cache";
 
-/* 🔥 CACHE SYSTEM */
-const CACHE_KEY="live_dispatch_cache";
-const CACHE_TIME=2*60*1000; // 2 min
+const CACHE_TIME =
+2 * 60 * 1000;
 
-async function loadData(){
+let fullData = [];
 
-let cache=localStorage.getItem(CACHE_KEY);
+/* SAFE NUMBER */
+function safeNumber(v){
+
+if(v === null || v === undefined)
+return 0;
+
+v = String(v)
+.replace(/,/g,'')
+.trim();
+
+let n = parseFloat(v);
+
+if(isNaN(n))
+return 0;
+
+return n;
+
+}
+
+/* LOAD */
+function loadData(){
+
+let tbody =
+document.getElementById(
+"tbody"
+);
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="5"
+class="loading">
+Loading...
+</td>
+</tr>
+`;
+
+/* CACHE */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
 
 if(cache){
-let parsed=JSON.parse(cache);
 
-if(Date.now()-parsed.time < CACHE_TIME){
-fullData=parsed.data;
+let parsed =
+JSON.parse(cache);
+
+if(
+Date.now() -
+parsed.time
+<
+CACHE_TIME
+){
+
+fullData =
+parsed.data;
+
 renderAll();
+
 return;
+
 }
+
 }
 
-// FETCH FROM SCRIPT
-let res=await fetch(API_URL);
-let data=await res.json();
+}catch(e){
 
-fullData=data;
+console.log(
+"cache error"
+);
 
-// SAVE CACHE
-localStorage.setItem(CACHE_KEY,JSON.stringify({
+}
+
+/* XHR */
+let xhr =
+new XMLHttpRequest();
+
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
+
+try{
+
+let data =
+JSON.parse(
+xhr.responseText
+);
+
+fullData =
+data;
+
+/* SAVE CACHE */
+try{
+
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
 time:Date.now(),
 data:fullData
-}));
+})
+);
 
+}catch(e){}
+
+/* RENDER */
 renderAll();
+
+}catch(err){
+
+console.log(err);
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="5">
+JSON Parse Error
+</td>
+</tr>
+`;
+
 }
 
-/* 🔄 AUTO REFRESH (30 sec silent) */
-setInterval(loadData,30000);
+}else{
 
+tbody.innerHTML =
+`
+<tr>
+<td colspan="5">
+Server Error
+</td>
+</tr>
+`;
+
+}
+
+}
+
+};
+
+xhr.onerror =
+function(){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="5">
+Network Error
+</td>
+</tr>
+`;
+
+};
+
+xhr.send();
+
+}
+
+/* AUTO REFRESH */
+setInterval(
+loadData,
+30000
+);
+
+/* MANUAL */
 function manualRefresh(){
-localStorage.removeItem(CACHE_KEY);
+
+try{
+
+localStorage.removeItem(
+CACHE_KEY
+);
+
+}catch(e){}
+
 loadData();
+
 }
 
 /* RENDER */
 function renderAll(){
 
-let search=document.getElementById("search").value.toLowerCase();
+let search =
+document.getElementById(
+"search"
+).value.toLowerCase();
 
-let tbody=document.getElementById("tbody");
-tbody.innerHTML="";
+let tbody =
+document.getElementById(
+"tbody"
+);
 
-let vehicleCount={};
-let totalEntries=0;
-let totalGross=0;
+tbody.innerHTML = "";
 
-for(let i=1;i<fullData.length;i++){
+let vehicleCount = {};
 
-let row=fullData[i];
-let vehicle=row[1];
+let totalEntries = 0;
 
-if(!vehicle) continue;
+let totalGross = 0;
 
-if(search && !vehicle.toLowerCase().includes(search)) continue;
+/* LOOP */
+for(
+let i=1;
+i<fullData.length;
+i++
+){
 
-let gross=row[3];
+let row =
+fullData[i];
+
+if(!row)
+continue;
+
+let vehicle =
+String(
+row[1] || ""
+).trim();
+
+if(!vehicle)
+continue;
+
+/* SEARCH */
+if(
+search &&
+!vehicle.toLowerCase()
+.includes(search)
+)
+continue;
+
+let tare =
+safeNumber(row[2]);
+
+let gross =
+safeNumber(row[3]);
+
+let time =
+row[4] || "";
+
+let tat =
+row[5] || "";
 
 totalEntries++;
 
-if(!vehicleCount[vehicle]) vehicleCount[vehicle]=0;
+if(!vehicleCount[vehicle]){
+
+vehicleCount[vehicle] = 0;
+
+}
+
 vehicleCount[vehicle]++;
 
-if(gross && gross!="" && gross!="0") totalGross++;
+if(gross > 0){
 
-let tr=document.createElement("tr");
+totalGross++;
 
-tr.className = (!gross || gross=="0") ? "pending" : "done";
+}
 
-tr.innerHTML=`
-<td>${vehicle}</td>
-<td>${row[2]}</td>
-<td>${row[3]}</td>
-<td>${row[4]}</td>
-<td>${row[5]}</td>
+/* ROW */
+let tr =
+document.createElement(
+"tr"
+);
+
+tr.className =
+gross <= 0
+?
+"pending"
+:
+"done";
+
+tr.innerHTML =
+`
+<td>
+${vehicle}
+</td>
+
+<td>
+${tare.toLocaleString()}
+</td>
+
+<td>
+${gross.toLocaleString()}
+</td>
+
+<td>
+${time}
+</td>
+
+<td>
+${tat}
+</td>
 `;
 
 tbody.appendChild(tr);
+
+}
+
+/* EMPTY */
+if(totalEntries === 0){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="5">
+No Data Found
+</td>
+</tr>
+`;
+
 }
 
 /* SUMMARY */
-let unique=Object.keys(vehicleCount).length;
+let unique =
+Object.keys(
+vehicleCount
+).length;
 
-let double=0,triple=0;
+let double = 0;
+
+let triple = 0;
+
 for(let v in vehicleCount){
-if(vehicleCount[v]==2) double++;
-if(vehicleCount[v]>=3) triple++;
+
+if(vehicleCount[v] == 2){
+
+double++;
+
 }
 
-let pending=totalEntries-totalGross;
+if(vehicleCount[v] >= 3){
 
-document.getElementById("c1").innerText=unique;
-document.getElementById("c2").innerText=totalGross;
-document.getElementById("c3").innerText=pending;
-document.getElementById("c4").innerText=double;
-document.getElementById("c5").innerText=triple;
-document.getElementById("c6").innerText=totalEntries;
+triple++;
+
+}
+
+}
+
+let pending =
+totalEntries - totalGross;
+
+/* UI */
+document.getElementById(
+"c1"
+).innerText =
+unique.toLocaleString();
+
+document.getElementById(
+"c2"
+).innerText =
+totalGross.toLocaleString();
+
+document.getElementById(
+"c3"
+).innerText =
+pending.toLocaleString();
+
+document.getElementById(
+"c4"
+).innerText =
+double.toLocaleString();
+
+document.getElementById(
+"c5"
+).innerText =
+triple.toLocaleString();
+
+document.getElementById(
+"c6"
+).innerText =
+totalEntries.toLocaleString();
+
 }
 
 /* START */
@@ -281,4 +668,5 @@ loadData();
 </script>
 
 </body>
+
 </html>

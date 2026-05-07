@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="Content-Security-Policy"
+content="default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
 
 <title>Date Wise Report</title>
 
 <style>
+
 :root{
 --bg:#020c1b;
 --card:#0f1f3d;
@@ -15,45 +24,60 @@
 --warn:#ffd54f;
 }
 
-body{
+*{
 margin:0;
-font-family:Arial;
-background:var(--bg);
-color:var(--text);
+padding:0;
+box-sizing:border-box;
 }
 
-/* HEADER */
+body{
+font-family:Arial,sans-serif;
+background:var(--bg);
+color:var(--text);
+overflow-x:hidden;
+}
+
 .header{
 display:flex;
 align-items:center;
-padding:12px;
+padding:14px;
 background:#061529;
 position:sticky;
 top:0;
+z-index:100;
 }
 
 .back{
 background:var(--primary);
 border:none;
-padding:10px;
-border-radius:8px;
+padding:10px 14px;
+border-radius:10px;
 margin-right:10px;
+font-size:18px;
+font-weight:bold;
+color:#000;
 }
 
-/* CONTROLS */
+.header h3{
+font-size:20px;
+}
+
 .controls{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:10px;
-padding:10px;
+padding:12px;
 }
 
-input,select,button{
+input,
+select,
+button{
 padding:12px;
 border:none;
 border-radius:10px;
 background:var(--card);
 color:white;
+font-size:14px;
 }
 
 button{
@@ -62,236 +86,726 @@ color:#000;
 font-weight:bold;
 }
 
-/* SUMMARY */
 .popup{
 margin:10px;
-padding:12px;
+padding:14px;
 background:linear-gradient(135deg,#00d4ff,#007bff);
-border-radius:10px;
+border-radius:12px;
 font-weight:bold;
+font-size:15px;
 }
 
-/* TABLE */
 .table-box{
 margin:10px;
 background:var(--card);
-border-radius:10px;
+border-radius:12px;
 overflow:auto;
-max-height:60vh;
+max-height:65vh;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
+min-width:500px;
 }
 
 th{
 background:#112a55;
-padding:10px;
+padding:12px;
+position:sticky;
+top:0;
 }
 
 td{
 padding:10px;
 border-bottom:1px solid #1e3a5f;
 text-align:center;
+font-size:14px;
 }
 
-/* highlight */
-.high-trips{ background:var(--warn); }
-.high-qty{ background:var(--accent); }
+.high-trips{
+background:var(--warn);
+color:#000;
+font-weight:bold;
+}
+
+.high-qty{
+background:var(--accent);
+font-weight:bold;
+}
+
+.loading{
+padding:20px;
+text-align:center;
+opacity:.8;
+}
+
+@media(max-width:480px){
+
+.controls{
+grid-template-columns:1fr;
+}
+
+table{
+font-size:13px;
+}
+
+}
 
 </style>
+
 </head>
 
 <body>
 
 <div class="header">
-<button class="back" onclick="goBack()">←</button>
+
+<button class="back"
+onclick="goBack()">
+←
+</button>
+
 <h3>Date Wise</h3>
+
 </div>
 
 <div class="controls">
-<select id="monthFilter" onchange="applyFilter()">
-<option value="">All Months</option>
+
+<select id="monthFilter"
+onchange="applyFilter()">
+
+<option value="">
+All Months
+</option>
+
 </select>
 
-<button onclick="manualRefresh()">🔄 Refresh</button>
+<button onclick="manualRefresh()">
+🔄 Refresh
+</button>
 
-<input type="date" id="fromDate">
-<input type="date" id="toDate">
+<input type="date"
+id="fromDate">
 
-<button onclick="applyFilter()">Apply Filter</button>
+<input type="date"
+id="toDate">
+
+<button onclick="applyFilter()">
+Apply Filter
+</button>
+
 </div>
 
-<div id="popup" class="popup"></div>
+<div id="popup"
+class="popup">
+
+Loading data...
+
+</div>
 
 <div class="table-box">
+
 <table>
+
 <thead>
+
 <tr>
 <th>Date</th>
 <th>Trips</th>
 <th>Qty</th>
 <th>Remarks</th>
 </tr>
+
 </thead>
-<tbody id="tbody"></tbody>
+
+<tbody id="tbody">
+
+<tr>
+<td colspan="4"
+class="loading">
+
+Loading...
+
+</td>
+</tr>
+
+</tbody>
+
 </table>
+
 </div>
 
 <script>
 
+/* BACK */
 function goBack(){
-window.location.href="dashboard.html";
+
+window.location.href =
+"dashboard.html";
+
 }
 
-const API_URL="https://script.google.com/macros/s/AKfycbxw62KUe8BisECVvUZLdIfsY974NOo-Su6peL6AcdQ3u_s1GAAyRwSOou3181qbmW10fg/exec";
-
-let fullData=[];
+/* API */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbxw62KUe8BisECVvUZLdIfsY974NOo-Su6peL6AcdQ3u_s1GAAyRwSOou3181qbmW10fg/exec";
 
 /* CACHE */
-const CACHE_KEY="date_cache";
-const CACHE_TIME=5*60*1000;
+const CACHE_KEY =
+"date_cache";
 
-async function loadData(){
+const CACHE_TIME =
+5 * 60 * 1000;
 
-let cache=localStorage.getItem(CACHE_KEY);
+let fullData = [];
+
+/* SAFE NUMBER */
+function safeNumber(v){
+
+if(v === null || v === undefined)
+return 0;
+
+v = String(v)
+.replace(/,/g,'')
+.trim();
+
+let n = parseFloat(v);
+
+if(isNaN(n))
+return 0;
+
+return n;
+
+}
+
+/* SAFE DATE */
+function safeDate(v){
+
+try{
+
+if(!v)
+return null;
+
+v = String(v).trim();
+
+/* YYYY-MM-DD */
+if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+
+let p = v.split("-");
+
+return new Date(
+Number(p[0]),
+Number(p[1]) - 1,
+Number(p[2]),
+12,
+0,
+0
+);
+
+}
+
+/* DD/MM/YYYY */
+if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){
+
+let p = v.split("/");
+
+return new Date(
+Number(p[2]),
+Number(p[1]) - 1,
+Number(p[0]),
+12,
+0,
+0
+);
+
+}
+
+let d = new Date(v);
+
+if(isNaN(d.getTime()))
+return null;
+
+return d;
+
+}catch(e){
+
+return null;
+
+}
+
+}
+
+/* FORMAT DATE */
+function formatDate(dateStr){
+
+let d = safeDate(dateStr);
+
+if(!d)
+return "-";
+
+let day =
+String(d.getDate()).padStart(2,'0');
+
+let month =
+String(d.getMonth()+1).padStart(2,'0');
+
+let year =
+d.getFullYear();
+
+return `${day}/${month}/${year}`;
+
+}
+
+/* LOAD */
+function loadData(){
+
+document.getElementById(
+"popup"
+).innerHTML =
+"Loading data...";
+
+/* CACHE */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
 
 if(cache){
-let parsed=JSON.parse(cache);
 
-if(Date.now()-parsed.time < CACHE_TIME){
-fullData=parsed.data;
+let parsed =
+JSON.parse(cache);
+
+if(
+Date.now() -
+parsed.time
+<
+CACHE_TIME
+){
+
+fullData =
+parsed.data;
+
 setupMonths();
+
 applyFilter();
+
 return;
+
 }
+
 }
 
-let res=await fetch(API_URL);
-let data=await res.json();
+}catch(e){}
 
-fullData=data;
+/* XHR */
+let xhr =
+new XMLHttpRequest();
 
-localStorage.setItem(CACHE_KEY,JSON.stringify({
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
+
+try{
+
+let data =
+JSON.parse(
+xhr.responseText
+);
+
+fullData =
+data;
+
+/* CACHE SAVE */
+try{
+
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
 time:Date.now(),
 data:fullData
-}));
+})
+);
+
+}catch(e){}
 
 setupMonths();
+
 applyFilter();
+
+}catch(err){
+
+console.log(err);
+
+document.getElementById(
+"popup"
+).innerHTML =
+"JSON Parse Error";
+
+}
+
+}else{
+
+document.getElementById(
+"popup"
+).innerHTML =
+"Server Error";
+
+}
+
+}
+
+};
+
+xhr.onerror =
+function(){
+
+document.getElementById(
+"popup"
+).innerHTML =
+"Network Error";
+
+};
+
+xhr.send();
+
 }
 
 /* AUTO REFRESH */
-setInterval(loadData,60000);
+setInterval(
+loadData,
+60000
+);
 
+/* REFRESH */
 function manualRefresh(){
-localStorage.removeItem(CACHE_KEY);
+
+try{
+
+localStorage.removeItem(
+CACHE_KEY
+);
+
+}catch(e){}
+
 loadData();
+
 }
 
-/* DATE FORMAT FIX */
-function formatDate(dateStr){
-
-let d = new Date(dateStr);
-
-// timezone fix
-d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-
-return d.toLocaleDateString('en-GB'); // dd/mm/yyyy
-}
-
-/* MONTH DROPDOWN */
+/* MONTHS */
 function setupMonths(){
 
-let select=document.getElementById("monthFilter");
-select.innerHTML='<option value="">All Months</option>';
+let select =
+document.getElementById(
+"monthFilter"
+);
 
-let months=new Map();
+select.innerHTML =
+'<option value="">All Months</option>';
 
-for(let i=1;i<fullData.length;i++){
+let months =
+new Map();
 
-let d=new Date(fullData[i][0]);
-d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+for(
+let i=1;
+i<fullData.length;
+i++
+){
 
-let key=d.getFullYear()+"-"+(d.getMonth()+1);
-let name=d.toLocaleString('default',{month:'long'});
+let row =
+fullData[i];
 
-months.set(key,name);
+if(!row)
+continue;
+
+let d =
+safeDate(row[0]);
+
+if(!d)
+continue;
+
+let key =
+d.getFullYear() +
+"-" +
+String(
+d.getMonth()+1
+).padStart(2,'0');
+
+let name =
+d.toLocaleString(
+'default',
+{
+month:'long',
+year:'numeric'
+}
+);
+
+months.set(
+key,
+name
+);
+
 }
 
-months.forEach((name,key)=>{
-let opt=document.createElement("option");
-opt.value=key;
-opt.text=name;
-select.appendChild(opt);
+months.forEach(
+(name,key)=>{
+
+let opt =
+document.createElement(
+"option"
+);
+
+opt.value = key;
+
+opt.text = name;
+
+select.appendChild(
+opt
+);
+
 });
+
 }
 
 /* FILTER */
 function applyFilter(){
 
-let selected=document.getElementById("monthFilter").value;
-let from=document.getElementById("fromDate").value;
-let to=document.getElementById("toDate").value;
+let selected =
+document.getElementById(
+"monthFilter"
+).value;
 
-let tbody=document.getElementById("tbody");
-tbody.innerHTML="";
+let from =
+document.getElementById(
+"fromDate"
+).value;
 
-let totalTrips=0,totalQty=0;
-let maxTrips=0,maxQty=0;
+let to =
+document.getElementById(
+"toDate"
+).value;
 
-let temp=[];
+let tbody =
+document.getElementById(
+"tbody"
+);
 
-for(let i=1;i<fullData.length;i++){
+tbody.innerHTML = "";
 
-let d=new Date(fullData[i][0]);
-d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+let totalTrips = 0;
 
-let ok=true;
+let totalQty = 0;
 
+let maxTrips = 0;
+
+let maxQty = 0;
+
+let temp = [];
+
+/* FILTER */
+for(
+let i=1;
+i<fullData.length;
+i++
+){
+
+let row =
+fullData[i];
+
+if(
+!row ||
+row.length < 3
+)
+continue;
+
+let d =
+safeDate(row[0]);
+
+if(!d)
+continue;
+
+let ok = true;
+
+/* MONTH FILTER */
 if(selected){
-let key=d.getFullYear()+"-"+(d.getMonth()+1);
-if(key!==selected) ok=false;
+
+let key =
+d.getFullYear() +
+"-" +
+String(
+d.getMonth()+1
+).padStart(2,'0');
+
+if(key !== selected){
+
+ok = false;
+
 }
 
-if(from && to){
-if(!(d>=new Date(from)&&d<=new Date(to))) ok=false;
 }
 
-if(ok) temp.push(fullData[i]);
+/* FROM */
+if(from){
+
+let fd =
+safeDate(from);
+
+if(fd && d < fd){
+
+ok = false;
+
+}
+
+}
+
+/* TO */
+if(to){
+
+let td =
+safeDate(to);
+
+if(td){
+
+td.setHours(
+23,59,59,999
+);
+
+if(d > td){
+
+ok = false;
+
+}
+
+}
+
+}
+
+if(ok){
+
+temp.push(row);
+
+}
+
+}
+
+/* EMPTY */
+if(temp.length === 0){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="4">
+No Data Found
+</td>
+</tr>
+`;
+
+document.getElementById(
+"popup"
+).innerHTML =
+"No records found";
+
+return;
+
 }
 
 /* MAX */
 temp.forEach(r=>{
-maxTrips=Math.max(maxTrips,parseFloat(r[1])||0);
-maxQty=Math.max(maxQty,parseFloat(r[2])||0);
+
+maxTrips =
+Math.max(
+maxTrips,
+safeNumber(r[1])
+);
+
+maxQty =
+Math.max(
+maxQty,
+safeNumber(r[2])
+);
+
 });
 
 /* RENDER */
 temp.forEach(r=>{
 
-let t=parseFloat(r[1])||0;
-let q=parseFloat(r[2])||0;
+let trips =
+safeNumber(r[1]);
 
-totalTrips+=t;
-totalQty+=q;
+let qty =
+safeNumber(r[2]);
 
-let tr=document.createElement("tr");
+totalTrips += trips;
 
-tr.innerHTML=`
-<td>${formatDate(r[0])}</td>
-<td class="${t===maxTrips?'high-trips':''}">${t}</td>
-<td class="${q===maxQty?'high-qty':''}">${q.toFixed(2)}</td>
-<td>${r[3] || ''}</td>
+totalQty += qty;
+
+let tr =
+document.createElement(
+"tr"
+);
+
+tr.innerHTML =
+`
+<td>
+${formatDate(r[0])}
+</td>
+
+<td class="${
+trips===maxTrips
+?
+'high-trips'
+:
+''
+}">
+${trips.toLocaleString()}
+</td>
+
+<td class="${
+qty===maxQty
+?
+'high-qty'
+:
+''
+}">
+${qty.toLocaleString(undefined,{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+})}
+</td>
+
+<td>
+${r[3] || ''}
+</td>
 `;
 
 tbody.appendChild(tr);
+
 });
 
 /* SUMMARY */
-document.getElementById("popup").innerHTML=
-`Trips: ${totalTrips} | Qty: ${totalQty.toFixed(2)}`;
+document.getElementById(
+"popup"
+).innerHTML =
+`
+Trips : ${totalTrips.toLocaleString()}
+
+<br><br>
+
+Qty : ${totalQty.toLocaleString(undefined,{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+})}
+`;
+
 }
 
 /* START */
@@ -300,4 +814,5 @@ loadData();
 </script>
 
 </body>
+
 </html>
