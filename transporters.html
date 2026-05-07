@@ -165,12 +165,10 @@ padding:0 10px 10px 10px;
 .list-box{
 height:100%;
 overflow:auto;
-
 -webkit-overflow-scrolling:touch;
 overscroll-behavior:contain;
 scroll-behavior:smooth;
 touch-action:pan-y;
-
 padding-bottom:120px;
 }
 
@@ -507,7 +505,6 @@ Loading...
 
 }
 
-/* CACHE */
 try{
 
 let cache =
@@ -531,7 +528,6 @@ applyFilter();
 
 }catch(e){}
 
-/* OFFLINE */
 if(!navigator.onLine){
 
 updateNetworkStatus();
@@ -540,7 +536,6 @@ return;
 
 }
 
-/* XHR */
 let xhr =
 new XMLHttpRequest();
 
@@ -573,7 +568,6 @@ JSON.stringify(fullData)
 fullData =
 data;
 
-/* CACHE SAVE */
 try{
 
 localStorage.setItem(
@@ -757,17 +751,12 @@ safe(row[12]);
 let remarks =
 safe(row[15]);
 
-/* NEW CONTACT COLUMNS */
-/* R = 17 */
-/* S = 18 */
-
 let contact1 =
 safe(row[17]);
 
 let contact2 =
 safe(row[18]);
 
-/* SEARCH */
 let full =
 row.join(" ")
 .toLowerCase();
@@ -778,7 +767,6 @@ search &&
 )
 continue;
 
-/* FILTER */
 if(
 filter &&
 transporter.toLowerCase() !== filter
@@ -966,7 +954,7 @@ document.getElementById(
 applyFilter
 );
 
-/* CALL SAFE */
+/* MIT CALL */
 function callNow(no){
 
 no = String(no || '').trim();
@@ -981,27 +969,18 @@ return;
 
 }
 
-/* COPY FIRST */
 copyText(no);
 
 showToast(
-"Number Copied : " + no
+"Opening Dialer : " + no
 );
 
-/* TRY DIALER */
 try{
 
-setTimeout(function(){
-
-let a =
-document.createElement("a");
-
-a.href =
-"tel:" + no;
-
-a.click();
-
-},500);
+window.AppInventor
+.setWebViewString(
+"CALL:" + no
+);
 
 }catch(e){
 
