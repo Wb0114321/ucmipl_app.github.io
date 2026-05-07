@@ -172,6 +172,7 @@ overflow:auto;
 overscroll-behavior:contain;
 scroll-behavior:smooth;
 touch-action:pan-y;
+
 padding-bottom:120px;
 }
 
@@ -421,7 +422,7 @@ window.location.href =
 
 }
 
-/* SCRIPT URL */
+/* APPS SCRIPT */
 const API_URL =
 "https://script.google.com/macros/s/AKfycbxcW8jb4s-BofoHfNxywsjiwj_QAzdHYIj1mw60Allb4O_16ZwSubgFwBjnea4ELFL4/exec";
 
@@ -587,7 +588,7 @@ JSON.stringify(fullData)
 fullData =
 data;
 
-/* SAVE CACHE */
+/* CACHE SAVE */
 try{
 
 localStorage.setItem(
@@ -946,45 +947,46 @@ document.getElementById(
 applyFilter
 );
 
-/* CALL + COPY */
+/* CALL SAFE */
 function callNow(no){
 
 no = String(no || '').trim();
 
-if(!no){
+if(!no || no === "1"){
 
 showToast(
-"Number Not Available"
+"Valid Number Not Found"
 );
 
 return;
 
 }
 
-/* TRY CALL */
-try{
-
-window.location.href =
-"tel:" + no;
-
-/* FALLBACK */
-setTimeout(function(){
-
+/* COPY FIRST */
 copyText(no);
 
 showToast(
-"Number copied : " + no
+"Number Copied : " + no
 );
 
-},1500);
+/* TRY DIALER */
+try{
+
+setTimeout(function(){
+
+let a =
+document.createElement("a");
+
+a.href =
+"tel:" + no;
+
+a.click();
+
+},500);
 
 }catch(e){
 
-copyText(no);
-
-showToast(
-"Number copied : " + no
-);
+console.log(e);
 
 }
 
