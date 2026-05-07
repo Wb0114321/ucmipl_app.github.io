@@ -55,11 +55,24 @@ background:#061529;
 position:sticky;
 top:0;
 z-index:100;
-text-align:center;
 box-shadow:0 2px 10px rgba(0,0,0,.4);
-flex-shrink:0;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
+/* BACK */
+.back-btn{
+background:#00d4ff;
+color:#000;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+font-weight:bold;
+font-size:15px;
+}
+
+/* TITLE */
 .header h2{
 font-size:22px;
 color:#00d4ff;
@@ -88,7 +101,7 @@ font-size:15px;
 outline:none;
 }
 
-/* STATUS BAR */
+/* STATUS */
 .status-bar{
 display:flex;
 justify-content:space-between;
@@ -249,6 +262,36 @@ text-align:center;
 opacity:.7;
 }
 
+/* TOAST */
+.toast{
+position:fixed;
+bottom:25px;
+left:50%;
+transform:translateX(-50%);
+background:#00d4ff;
+color:#000;
+padding:12px 18px;
+border-radius:12px;
+font-weight:bold;
+z-index:9999;
+box-shadow:0 4px 10px rgba(0,0,0,.4);
+animation:fadeToast .3s linear;
+}
+
+@keyframes fadeToast{
+
+from{
+opacity:0;
+bottom:10px;
+}
+
+to{
+opacity:1;
+bottom:25px;
+}
+
+}
+
 /* MOBILE */
 @media(max-width:600px){
 
@@ -273,7 +316,16 @@ padding:12px;
 <!-- HEADER -->
 <div class="header">
 
-<h2>🚛 Transporters</h2>
+<button class="back-btn"
+onclick="goDashboard()">
+
+⬅ Dashboard
+
+</button>
+
+<h2>
+🚛 Transporters
+</h2>
 
 </div>
 
@@ -361,6 +413,14 @@ Loading...
 
 <script>
 
+/* DASHBOARD */
+function goDashboard(){
+
+window.location.href =
+"dashboard.html";
+
+}
+
 /* SCRIPT URL */
 const API_URL =
 "https://script.google.com/macros/s/AKfycbxcW8jb4s-BofoHfNxywsjiwj_QAzdHYIj1mw60Allb4O_16ZwSubgFwBjnea4ELFL4/exec";
@@ -369,13 +429,8 @@ const API_URL =
 const CACHE_KEY =
 "transporters_offline_cache";
 
-const CACHE_TIME =
-24 * 60 * 60 * 1000;
-
 /* DATA */
 let fullData = [];
-
-let filteredData = [];
 
 let searchTimeout = null;
 
@@ -466,7 +521,7 @@ Loading...
 
 }
 
-/* CACHE FIRST */
+/* CACHE */
 try{
 
 let cache =
@@ -490,7 +545,7 @@ applyFilter();
 
 }catch(e){}
 
-/* INTERNET */
+/* OFFLINE */
 if(!navigator.onLine){
 
 updateNetworkStatus();
@@ -545,7 +600,6 @@ data:fullData
 
 }catch(e){}
 
-/* UPDATE */
 setupFilters();
 
 applyFilter();
@@ -884,7 +938,7 @@ applyFilter,
 }
 );
 
-/* FILTER EVENT */
+/* FILTER */
 document.getElementById(
 "transporterFilter"
 ).addEventListener(
@@ -892,18 +946,115 @@ document.getElementById(
 applyFilter
 );
 
-/* CALL */
+/* CALL + COPY */
 function callNow(no){
+
+no = String(no || '').trim();
+
+if(!no){
+
+showToast(
+"Number Not Available"
+);
+
+return;
+
+}
+
+/* TRY CALL */
+try{
 
 window.location.href =
 "tel:" + no;
 
+/* FALLBACK */
+setTimeout(function(){
+
+copyText(no);
+
+showToast(
+"Number copied : " + no
+);
+
+},1500);
+
+}catch(e){
+
+copyText(no);
+
+showToast(
+"Number copied : " + no
+);
+
+}
+
+}
+
+/* COPY VEHICLE */
+function copyVehicle(v){
+
+copyText(v);
+
+showToast(
+"Copied : " + v
+);
+
 }
 
 /* COPY */
-function copyVehicle(v){
+function copyText(txt){
 
-navigator.clipboard.writeText(v);
+try{
+
+navigator.clipboard
+.writeText(txt);
+
+}catch(e){
+
+let input =
+document.createElement(
+"textarea"
+);
+
+input.value = txt;
+
+document.body.appendChild(input);
+
+input.select();
+
+document.execCommand(
+"copy"
+);
+
+document.body.removeChild(input);
+
+}
+
+}
+
+/* TOAST */
+function showToast(msg){
+
+let toast =
+document.createElement(
+"div"
+);
+
+toast.className =
+"toast";
+
+toast.innerText =
+msg;
+
+document.body.appendChild(
+toast
+);
+
+setTimeout(function(){
+
+toast.remove();
+
+},2500);
 
 }
 
