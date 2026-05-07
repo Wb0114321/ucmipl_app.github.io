@@ -1,237 +1,810 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Cancelled E-Pass</title>
 
-    <style>
-        body { font-family: Arial; margin: 0; background: #f4f6f9; }
+<meta charset="UTF-8">
 
-        .header {
-            background: #dc3545;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            position: relative;
-        }
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-        .back {
-            position: absolute;
-            left: 15px;
-            top: 15px;
-            background: black;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
+<meta http-equiv="Content-Security-Policy"
+content="default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
 
-        .container { padding: 15px; }
+<title>Cancelled E-Pass</title>
 
-        input, select, button {
-            padding: 8px;
-            margin: 5px;
-        }
+<style>
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            margin-top: 10px;
-        }
+:root{
+--bg:#020c1b;
+--card:#0f1f3d;
+--text:#e6f1ff;
+--primary:#00d4ff;
+--danger:#ff5252;
+--success:#4caf50;
+}
 
-        th, td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            text-align: center;
-            font-size: 13px;
-        }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-        th {
-            background: #dc3545;
-            color: white;
-        }
+body{
+font-family:Arial,sans-serif;
+background:var(--bg);
+color:var(--text);
+overflow-x:hidden;
+}
 
-        .summary {
-            background: white;
-            padding: 10px;
-            margin-top: 10px;
-            border-left: 5px solid #dc3545;
-            font-weight: bold;
-        }
-    </style>
+/* HEADER */
+.header{
+background:#dc3545;
+padding:15px;
+text-align:center;
+position:sticky;
+top:0;
+z-index:100;
+font-size:20px;
+font-weight:bold;
+}
+
+.back{
+position:absolute;
+left:12px;
+top:12px;
+background:black;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+font-size:16px;
+}
+
+/* CONTAINER */
+.container{
+padding:10px;
+}
+
+/* INPUTS */
+input,
+select{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:var(--card);
+color:white;
+font-size:15px;
+}
+
+/* SUMMARY */
+.summary-frame{
+background:linear-gradient(135deg,#00d4ff,#007bff);
+padding:14px;
+border-radius:14px;
+margin-top:12px;
+color:#000;
+font-weight:bold;
+line-height:1.8;
+box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+
+.summary-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
+.summary-card{
+background:white;
+border-radius:12px;
+padding:12px;
+text-align:center;
+}
+
+.summary-card h3{
+font-size:14px;
+margin-bottom:8px;
+color:#333;
+}
+
+.summary-card span{
+font-size:18px;
+font-weight:bold;
+color:#000;
+}
+
+/* TABLE */
+.table-box{
+margin-top:12px;
+background:var(--card);
+border-radius:14px;
+overflow:auto;
+max-height:65vh;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+min-width:900px;
+}
+
+th{
+background:#dc3545;
+padding:12px;
+position:sticky;
+top:0;
+font-size:14px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #1e3a5f;
+text-align:center;
+font-size:13px;
+}
+
+/* STATUS */
+.solved{
+background:#123b26;
+color:#7CFC00;
+font-weight:bold;
+}
+
+.pending{
+background:#5a1f1f;
+color:#ff8080;
+font-weight:bold;
+}
+
+/* LOADING */
+.loading{
+padding:20px;
+text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+
+.summary-grid{
+grid-template-columns:1fr 1fr;
+}
+
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="header">
-    <button class="back" onclick="goBack()">⬅ Back</button>
-    Cancelled E-Pass
+
+<button class="back"
+onclick="goBack()">
+
+⬅
+
+</button>
+
+Cancelled E-Pass
+
 </div>
 
 <div class="container">
 
-    🔍 <input type="text" id="search" placeholder="Search anything..." onkeyup="applyFilters()">
+<input type="text"
+id="search"
+placeholder="🔍 Search..."
+onkeyup="applyFilters()">
 
-    📆 <select id="monthFilter" onchange="applyFilters()">
-        <option value="">All Months</option>
-    </select>
+<select id="monthFilter"
+onchange="applyFilters()">
 
-    📅 From <input type="date" id="fromDate" onchange="applyFilters()">
-    To <input type="date" id="toDate" onchange="applyFilters()">
+<option value="">
+📆 All Months
+</option>
 
-    <div class="summary" id="summaryBox"></div>
+</select>
 
-    <table id="table">
-        <thead>
-            <tr>
-                <th>Cancel Pass No</th>
-                <th>Grade</th>
-                <th>Cancel Qty</th>
-                <th>Reason</th>
-                <th>Operator</th>
-                <th>Status Return</th>
-                <th>Status Solved</th>
-                <th>Remarks</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+<input type="date"
+id="fromDate"
+onchange="applyFilters()">
+
+<input type="date"
+id="toDate"
+onchange="applyFilters()">
+
+<!-- SUMMARY -->
+<div class="summary-frame">
+
+<div>
+📊 Live Summary
+</div>
+
+<div class="summary-grid">
+
+<div class="summary-card">
+<h3>Total Pass</h3>
+<span id="totalCount">0</span>
+</div>
+
+<div class="summary-card">
+<h3>Total Qty</h3>
+<span id="totalQty">0</span>
+</div>
+
+<div class="summary-card">
+<h3>Solved</h3>
+<span id="solvedCount">0</span>
+</div>
+
+<div class="summary-card">
+<h3>Pending</h3>
+<span id="pendingCount">0</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- TABLE -->
+<div class="table-box">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Pass No</th>
+<th>Grade</th>
+<th>Qty</th>
+<th>Reason</th>
+<th>Operator</th>
+<th>Return</th>
+<th>Status</th>
+<th>Remarks</th>
+</tr>
+
+</thead>
+
+<tbody id="tbody">
+
+<tr>
+<td colspan="8"
+class="loading">
+
+Loading...
+
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
 <script>
 
-// 🔐 Login check
-if(!localStorage.getItem("user")){
-    window.location.href = "index.html";
+/* BACK */
+function goBack(){
+
+window.location.href =
+"dashboard.html";
+
 }
 
-function goBack(){ window.location.href="dashboard.html"; }
+/* APPS SCRIPT */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbyCXKfzSBmoY-rBkC7s9OQm4czbIk_JuylXzWQFwfmZRZ2VgGoJ1ik-kc0MJikeGCiecw/exec";
 
-// 🔑 API
-const SHEET_ID = "1NO5OV7GV5Ii6rFXHK5KLgXeNDD9UudvpfuE4jUThtsc";
-const API_KEY = "AIzaSyCsisw-gn_0T-_IYpdUZQyvI92lzo_NFgU";
+/* CACHE */
+const CACHE_KEY =
+"cancel_epass_cache";
+
+const CACHE_TIME =
+5 * 60 * 1000;
 
 let fullData = [];
+
 let filteredData = [];
 
-// 📡 Fetch
-fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Cancelled_epass_26-27?key=${API_KEY}`)
-.then(res => res.json())
-.then(data => {
-    fullData = data.values;
-    setupMonths();
-    applyFilters();
+/* SAFE NUMBER */
+function safeNumber(v){
+
+v = String(v || 0)
+.replace(/,/g,'');
+
+let n = parseFloat(v);
+
+return isNaN(n)
+?
+0
+:
+n;
+
+}
+
+/* SAFE DATE */
+function safeDate(v){
+
+try{
+
+if(!v)
+return null;
+
+v = String(v).trim();
+
+if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+
+let p = v.split("-");
+
+return new Date(
+Number(p[0]),
+Number(p[1])-1,
+Number(p[2]),
+12,
+0,
+0
+);
+
+}
+
+let d = new Date(v);
+
+if(isNaN(d.getTime()))
+return null;
+
+return d;
+
+}catch(e){
+
+return null;
+
+}
+
+}
+
+/* LOAD DATA */
+function loadData(){
+
+let tbody =
+document.getElementById(
+"tbody"
+);
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="8"
+class="loading">
+Loading...
+</td>
+</tr>
+`;
+
+/* CACHE */
+try{
+
+let cache =
+localStorage.getItem(
+CACHE_KEY
+);
+
+if(cache){
+
+let parsed =
+JSON.parse(cache);
+
+if(
+Date.now() -
+parsed.time
+<
+CACHE_TIME
+){
+
+fullData =
+parsed.data;
+
+setupMonths();
+
+applyFilters();
+
+return;
+
+}
+
+}
+
+}catch(e){}
+
+/* XHR */
+let xhr =
+new XMLHttpRequest();
+
+xhr.open(
+"GET",
+API_URL + "?t=" + Date.now(),
+true
+);
+
+xhr.onreadystatechange =
+function(){
+
+if(xhr.readyState === 4){
+
+if(xhr.status === 200){
+
+try{
+
+fullData =
+JSON.parse(
+xhr.responseText
+);
+
+/* SAVE CACHE */
+try{
+
+localStorage.setItem(
+CACHE_KEY,
+JSON.stringify({
+time:Date.now(),
+data:fullData
+})
+);
+
+}catch(e){}
+
+setupMonths();
+
+applyFilters();
+
+}catch(err){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="8">
+JSON Error
+</td>
+</tr>
+`;
+
+}
+
+}else{
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="8">
+Server Error
+</td>
+</tr>
+`;
+
+}
+
+}
+
+};
+
+xhr.onerror =
+function(){
+
+tbody.innerHTML =
+`
+<tr>
+<td colspan="8">
+Network Error
+</td>
+</tr>
+`;
+
+};
+
+xhr.send();
+
+}
+
+/* MONTHS */
+function setupMonths(){
+
+let months =
+new Set();
+
+for(
+let i=1;
+i<fullData.length;
+i++
+){
+
+let d =
+safeDate(
+fullData[i][1]
+);
+
+if(d){
+
+months.add(
+d.toLocaleString(
+'default',
+{
+month:'long'
+}
+)
+);
+
+}
+
+}
+
+let select =
+document.getElementById(
+"monthFilter"
+);
+
+select.innerHTML =
+'<option value="">📆 All Months</option>';
+
+months.forEach(m=>{
+
+let opt =
+document.createElement(
+"option"
+);
+
+opt.value = m;
+
+opt.text = m;
+
+select.appendChild(opt);
+
 });
 
-// 📆 Month dropdown
-function setupMonths(){
-    let months = new Set();
-
-    for(let i=1;i<fullData.length;i++){
-        let d = fullData[i][1]; // entry_date
-        if(d){
-            let m = new Date(d).toLocaleString('default',{month:'long'});
-            months.add(m);
-        }
-    }
-
-    let select = document.getElementById("monthFilter");
-    months.forEach(m=>{
-        let opt = document.createElement("option");
-        opt.value = m;
-        opt.text = m;
-        select.appendChild(opt);
-    });
 }
 
-// 🔍 Apply all filters
+/* FILTER */
 function applyFilters(){
 
-    let search = document.getElementById("search").value.toLowerCase();
-    let month = document.getElementById("monthFilter").value;
-    let from = document.getElementById("fromDate").value;
-    let to = document.getElementById("toDate").value;
+let search =
+document.getElementById(
+"search"
+).value.toLowerCase();
 
-    filteredData = [fullData[0]];
+let month =
+document.getElementById(
+"monthFilter"
+).value;
 
-    for(let i=1;i<fullData.length;i++){
+let from =
+document.getElementById(
+"fromDate"
+).value;
 
-        let row = fullData[i];
+let to =
+document.getElementById(
+"toDate"
+).value;
 
-        let cancelNo = row[2];
-        if(!cancelNo || cancelNo.trim()==="") continue;
+filteredData =
+[fullData[0]];
 
-        let date = row[1];
+for(
+let i=1;
+i<fullData.length;
+i++
+){
 
-        // 🔍 search
-        let matchSearch = row.join(" ").toLowerCase().includes(search);
+let row =
+fullData[i];
 
-        // 📆 month
-        let matchMonth = true;
-        if(month){
-            let m = new Date(date).toLocaleString('default',{month:'long'});
-            matchMonth = (m === month);
-        }
+if(!row)
+continue;
 
-        // 📅 date range
-        let matchDate = true;
-        if(from && to){
-            let d = new Date(date);
-            matchDate = (d >= new Date(from) && d <= new Date(to));
-        }
+let d =
+safeDate(row[1]);
 
-        if(matchSearch && matchMonth && matchDate){
-            filteredData.push(row);
-        }
-    }
+let matchSearch =
+row.join(" ")
+.toLowerCase()
+.includes(search);
 
-    renderTable();
-    updateSummary();
+let matchMonth =
+true;
+
+if(month && d){
+
+matchMonth =
+d.toLocaleString(
+'default',
+{
+month:'long'
+}
+) === month;
+
 }
 
-// 📊 Table
+let matchDate =
+true;
+
+if(from && to && d){
+
+let fd =
+safeDate(from);
+
+let td =
+safeDate(to);
+
+td.setHours(
+23,59,59,999
+);
+
+matchDate =
+(d >= fd && d <= td);
+
+}
+
+if(
+matchSearch &&
+matchMonth &&
+matchDate
+){
+
+filteredData.push(row);
+
+}
+
+}
+
+renderTable();
+
+updateSummary();
+
+}
+
+/* TABLE */
 function renderTable(){
-    let tbody = document.querySelector("#table tbody");
-    tbody.innerHTML = "";
 
-    for(let i=1;i<filteredData.length;i++){
+let tbody =
+document.getElementById(
+"tbody"
+);
 
-        let row = filteredData[i];
+tbody.innerHTML = "";
 
-        let tr = document.createElement("tr");
+for(
+let i=1;
+i<filteredData.length;
+i++
+){
 
-        tr.innerHTML = `
-            <td>${row[2]}</td>
-            <td>${row[3]}</td>
-            <td>${row[6]}</td>
-            <td>${row[7]}</td>
-            <td>${row[8]}</td>
-            <td>${row[10]}</td>
-            <td>${row[11]}</td>
-            <td>${row[12]}</td>
-        `;
+let row =
+filteredData[i];
 
-        tbody.appendChild(tr);
-    }
+let status =
+String(
+row[11] || ""
+).toUpperCase();
+
+let cls =
+(
+status.includes("SOLVED") ||
+status.includes("COMPLETE")
+)
+?
+"solved"
+:
+"pending";
+
+let tr =
+document.createElement(
+"tr"
+);
+
+tr.innerHTML =
+`
+<td>${row[2] || ''}</td>
+<td>${row[3] || ''}</td>
+<td>${row[6] || ''}</td>
+<td>${row[7] || ''}</td>
+<td>${row[8] || ''}</td>
+<td>${row[10] || ''}</td>
+<td class="${cls}">
+${row[11] || ''}
+</td>
+<td>${row[12] || ''}</td>
+`;
+
+tbody.appendChild(tr);
+
 }
 
-// 📊 Summary
+}
+
+/* SUMMARY */
 function updateSummary(){
 
-    let totalQty = 0;
-    let count = 0;
+let qty = 0;
 
-    for(let i=1;i<filteredData.length;i++){
-        totalQty += parseFloat(filteredData[i][6])||0;
-        count++;
-    }
+let count = 0;
 
-    document.getElementById("summaryBox").innerHTML =
-        "Total Cancel Count: "+count+" | Total Cancel Qty: "+totalQty;
+let solved = 0;
+
+let pending = 0;
+
+for(
+let i=1;
+i<filteredData.length;
+i++
+){
+
+qty +=
+safeNumber(
+filteredData[i][6]
+);
+
+count++;
+
+let status =
+String(
+filteredData[i][11] || ""
+).toUpperCase();
+
+if(
+status.includes("SOLVED") ||
+status.includes("COMPLETE")
+){
+
+solved++;
+
+}else{
+
+pending++;
+
 }
+
+}
+
+document.getElementById(
+"totalCount"
+).innerText =
+count.toLocaleString();
+
+document.getElementById(
+"totalQty"
+).innerText =
+qty.toLocaleString();
+
+document.getElementById(
+"solvedCount"
+).innerText =
+solved.toLocaleString();
+
+document.getElementById(
+"pendingCount"
+).innerText =
+pending.toLocaleString();
+
+}
+
+/* AUTO REFRESH */
+setInterval(
+loadData,
+60000
+);
+
+/* START */
+loadData();
 
 </script>
 
 </body>
+
 </html>
